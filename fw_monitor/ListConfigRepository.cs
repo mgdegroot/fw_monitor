@@ -79,7 +79,6 @@ namespace fw_monitor
         public string Name { get; set; }
         public string Description { get; set; }
         public Uri URL { get; set; }
-        public string URL_Str => URL.ToString();
         public bool IsComposite { get; set; } = false;
         public bool IsRevisioned { get; set; } = false;
         public Regex RevisionRegex { get; set; }

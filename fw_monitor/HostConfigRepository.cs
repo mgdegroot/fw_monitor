@@ -7,17 +7,17 @@ using System.Text;
 
 namespace fw_monitor
 {
-    public class HostConfigRepository : IConfigRepository
+    public static class HostConfigRepository
     {
         private static string REPO_FILE_EXTENSION = ".json";
         
         // TODO: move to config file -->
         private static string REPO_BASE_PATH = Environment.GetEnvironmentVariable("HOME") + "/NftHosts/";
-        public Dictionary<string, NftConfig> Hosts { get; private set; } = new Dictionary<string, NftConfig>();
+        public static Dictionary<string, NftConfig> Repository { get; private set; } = new Dictionary<string, NftConfig>();
         
-        public NftConfig GetConfig(string hostname)
+        public static NftConfig Get(string hostname)
         {
-            Hosts.TryGetValue(hostname, out NftConfig nftConfig);
+            Repository.TryGetValue(hostname, out NftConfig nftConfig);
 
             if (nftConfig == null)
             {
@@ -26,7 +26,7 @@ namespace fw_monitor
                 {
                     string strConf = readFromFile(path);
                     nftConfig = deserialize(strConf);
-                    Hosts.Add(hostname, nftConfig);
+                    Repository.Add(hostname, nftConfig);
                 }
                 else
                 {
@@ -38,14 +38,14 @@ namespace fw_monitor
             return nftConfig;
         }
 
-        public void SetConfig(NftConfig nftConfig)
+        public static void SetConfig(NftConfig nftConfig)
         {
-            Hosts[nftConfig.HostName] = nftConfig;
+            Repository[nftConfig.HostName] = nftConfig;
             string strConf = serialize(nftConfig);
             writeToFile(Path.Combine(REPO_BASE_PATH, nftConfig.HostName + REPO_FILE_EXTENSION), strConf);
         }
         
-        private string serialize(NftConfig nftConfig)
+        private static string serialize(NftConfig nftConfig)
         {
             // serializing here so set 'NewEntry' to false -->
             nftConfig.Empty = false;
@@ -58,7 +58,7 @@ namespace fw_monitor
             return Encoding.UTF8.GetString(json, 0, json.Length);
         }
 
-        private NftConfig deserialize(string json)
+        private static NftConfig deserialize(string json)
         {
             
             MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -68,13 +68,13 @@ namespace fw_monitor
             return nftConfig;
         }
 
-        private string readFromFile(string path)
+        private static string readFromFile(string path)
         {
             string content = File.ReadAllText(path, Encoding.UTF8);
             return content;
         }
 
-        private void writeToFile(string path, string content)
+        private static void writeToFile(string path, string content)
         {
             File.WriteAllText(path, content, Encoding.UTF8);
         }
@@ -97,8 +97,9 @@ namespace fw_monitor
         [DataMember(Order = 7)] public string CertPath { get; set; } = string.Empty;
         [DataMember(Order = 8)] public string TableName { get; set; }
         [DataMember(Order = 9)] public string ChainName { get; set; }
-        [DataMember(Order = 10)] public string SetName { get; set; }
-        [DataMember(Order = 11)] public bool SupportsFlush { get; set; }
+        [DataMember(Order = 10)] public bool FlushChain { get; set; }
+        [DataMember(Order = 11)] public string SetName { get; set; }
+        [DataMember(Order = 12)] public bool SupportsFlush { get; set; }
 
         public string GetFormattedConfig(bool incPassword)
         {
@@ -111,6 +112,7 @@ UsePubkeyLogin: {UsePubkeyLogin.ToString()}
 CertPath: {CertPath}
 TableName: {TableName}
 ChainName: {ChainName}
+FlushChain: {FlushChain}
 SetName: {SetName}
 SupportsFlush: {SupportsFlush.ToString()}";
         }

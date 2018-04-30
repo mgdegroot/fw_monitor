@@ -8,82 +8,113 @@ namespace fw_monitor
 {
     public class NFTManager
     {
-//        private const string URL_EMERGING_THREATS_BLOCK_IPS =
-//            @"https://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt";
-//        
-//        private const string URL_DBG_EMERGING_THREATS = 
-//            @"http://localhost/emerging_threats.txt";
-        
-        public async Task ManageLists()
+
+        public async Task ManageLists(string listConfigName = null, string hostConfigName = null, bool interactive = true)
         {
-            ListConfig listConfig = getListConfig();
-            if (listConfig == null)
-            {
-                Console.WriteLine("No config selected. Exiting...");
-                Environment.Exit(1);
-            }
+            ListConfig listConfig = null;
+            NftConfig hostConfig = null;
             
-            NftConfig hostConfig = getRemoteHostConfig();
+            if (!interactive)
+            {
+                if (string.IsNullOrEmpty(listConfigName) || string.IsNullOrEmpty(hostConfigName))
+                {
+                    throw new ArgumentException("If not interactive configNames need to be set.");
+                }
+
+                listConfig = ListConfigRepository.Get(listConfigName);
+                hostConfig = HostConfigRepository.Get(hostConfigName);
+            }
+            else
+            {
+                listConfig = getListConfig();
+                if (listConfig == null)
+                {
+                    Console.WriteLine("No config selected. Exiting...");
+                    Environment.Exit(1);
+                }
+            
+                hostConfig = getRemoteHostConfig();
+                
+                string answer = readEntry("Flush chain containing sets first (y/n)?", "n");
+
+                if (answer.ToLower().Contains("y"))
+                {
+                    hostConfig.FlushChain = true;
+                    
+                }
+                else
+                {
+                    hostConfig.FlushChain = false;
+                }
+            }
+
             Dictionary<string, List<string>> lists = await fetchList(listConfig);
             
             NFT_SshConnector connector = new NFT_SshConnector(hostConfig);
-            connector.ErrorAdded += nftSsh_ErrorAdded;
-            connector.OutputAdded += nftSsh_OutputAdded;
-            
-            string answer = readEntry("Flush chain containing sets first (y/n)?", "n");
 
-            if (answer.ToLower().Contains("y"))
+            if (hostConfig.FlushChain)
             {
                 connector.flushChain(hostConfig.ChainName);
             }
+            connector.ErrorAdded += nftSsh_ErrorAdded;
+            connector.OutputAdded += nftSsh_OutputAdded;
             
-            foreach (string listName in lists.Keys.Where(i => i != "COMBINED"))
-            {
-                Console.WriteLine($"Processing {listName}...");
 
-                connector.createSet(listName);
+            
+            foreach (string name in lists.Keys.Where(i => i != "COMBINED"))
+            {
+                Console.WriteLine($"Processing {name}...");
+
+                connector.createSet(name);
                 // Create set, but don't try to add elements if empty -->
-                if (lists[listName].Count > 0)
+                if (lists[name].Count > 0)
                 {
                     // Try to add in bulk first.
                     // If that fails (mostly due to overlapping intervals) add entries sequentially -->
-                    bool result = connector.AddElementsParallel(listName, lists[listName]);
+                    bool result = connector.AddElementsParallel(name, lists[name]);
 
                     if (!result)
                     {
-                        connector.AddElementsSequentially(listName, lists[listName]);
+                        connector.AddElementsSequentially(name, lists[name]);
                     }
                 }
 
-                connector.createRuleReferencingSet(listName);
+                connector.createRuleReferencingSet(name);
 
             }
         }
 
-        private ListConfig getListConfig()
+        private ListConfig getListConfig(string listName=null, bool interactive=false)
         {
-            string listName = null;
-            ListConfig foundList = null;
-            bool correctList = false;
-            
-            do
+            if (!interactive)
             {
-                listName = readEntry("list", "emergingthreats");
-                foundList = ListConfigRepository.Get(listName);
+                return ListConfigRepository.Get(listName);
+            }
+            else
+            {
+                ListConfig foundList = null;
+                bool correctList = false;
+                
+                do
+                {
+                    listName = readEntry("list", "emergingthreats");
+                    foundList = ListConfigRepository.Get(listName);
 
-                correctList = readEntry($"Found list with URL {foundList.URL_Str}. Correct?", "y").ToLower().Contains("y");
-            } while (!correctList);
+                    correctList = readEntry($"Found list with URL {foundList.URL}. Correct?", "y").ToLower()
+                        .Contains("y");
+                } while (!correctList);
 
-            return foundList;
+                return foundList;
+            }
         }
         
         private NftConfig getRemoteHostConfig()
         {
             string hostName = readEntry("hostname", null);
             
-            HostConfigRepository hostConfigRepository = new HostConfigRepository();
+//            HostConfigRepository hostConfigRepository = new HostConfigRepository();
 
-            NftConfig testConfig = hostConfigRepository.GetConfig(hostName);
+            NftConfig testConfig = HostConfigRepository.Get(hostName);
 
             if (testConfig.Empty)
             {
@@ -94,7 +125,7 @@ namespace fw_monitor
                     askForInput(testConfig);
                 }
 
-                hostConfigRepository.SetConfig(testConfig);
+                HostConfigRepository.SetConfig(testConfig);
             }
             else
             {
@@ -121,6 +152,7 @@ namespace fw_monitor
             nftConfig.CertPath = readEntry("certificate path", nftConfig.CertPath);
             nftConfig.TableName = readEntry("table name", nftConfig.TableName);
             nftConfig.ChainName = readEntry("chain name", nftConfig.ChainName);
+            nftConfig.FlushChain = readEntry("flush chain", nftConfig.FlushChain ? "y" : "n").ToLower().Contains("y");
             nftConfig.SetName = readEntry("set name", nftConfig.SetName);
             nftConfig.SupportsFlush = readEntry("supports flush", nftConfig.SupportsFlush ? "y" : "n").ToLower().Contains("y");
             nftConfig.UsePubkeyLogin = String.IsNullOrEmpty(nftConfig.CertPath) == false;

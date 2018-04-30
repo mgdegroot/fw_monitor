@@ -11,7 +11,7 @@
         <e p="IConfigRepository.cs" t="Include" />
         <e p="ListConfigRepository.cs" t="Include" />
         <e p="ListFetcher.cs" t="Include" />
-        <e p="ListStore.cs" t="Include" />
+        <e p="ListRepository.cs" t="Include" />
         <e p="NFTManager.cs" t="Include" />
         <e p="NFT_SshConnector.cs" t="Include" />
         <e p="Program.cs" t="Include" />
