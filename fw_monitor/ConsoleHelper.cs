@@ -8,7 +8,7 @@ namespace fw_monitor
     
     public static class ConsoleHelper
     {
-        private static Dictionary<string,bool>defaultBoolMapping = new Dictionary<string,bool>() {{"y", true}, {"n", false}, {null, false}};
+        private static Dictionary<string,bool>defaultBoolMapping = new Dictionary<string,bool>() {{"y", true}, {"n", false}};
         
         public enum ActionKey
         {
@@ -18,7 +18,7 @@ namespace fw_monitor
             EXIT = 'e',
         }
 
-        public static ActionKey parseActionKey(string input)
+        public static ActionKey ParseActionKey(string input)
         {
             if (string.IsNullOrEmpty(input))
             {
@@ -41,21 +41,21 @@ namespace fw_monitor
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public static bool parseInputAsBool(string input, Dictionary<string, bool>mapping = null)
+        public static bool ParseInputAsBool(string input, Dictionary<string, bool>mapping = null)
         {
+//            defaultBoolMapping = new Dictionary<string,bool>() {{"y", true}, {"n", false}, {null, false}};
             if (mapping == null) mapping = defaultBoolMapping;
 
-            mapping.TryGetValue(input, out bool retVal);
-
+            mapping.TryGetValue(input, out bool retVal);                
             return retVal;
         }
 
-        public static bool readInputAsBool(string entry, string defaultValue = null, Dictionary<string,bool> mapping=null)
+        public static bool ReadInputAsBool(string entry, string defaultValue = null, Dictionary<string,bool> mapping=null)
         {
-            return parseInputAsBool(readInput(entry, defaultValue), mapping);
+            return ParseInputAsBool(ReadInput(entry, defaultValue), mapping);
         }
         
-        public static string readInput(string entry, string defaultValue = null)
+        public static string ReadInput(string entry, string defaultValue = null)
         {
             
             if (String.IsNullOrEmpty(defaultValue))

@@ -1,4 +1,5 @@
 ﻿
+using fw_monitor.DataObjects;
 using Xunit;
 
 namespace fw_monitor.test
@@ -12,7 +13,7 @@ namespace fw_monitor.test
             expectedSetName = "setName",
             expectedUsername = "userName",
             expectedPassword = "password",
-            expectedHostName = "hostname",
+            expectedName = "hostname",
             expectedHostIP = "hostip";
 
         private bool 
@@ -25,7 +26,7 @@ namespace fw_monitor.test
             HostConfig retVal = new HostConfig()
             {
                 Empty = expectedEmpty,
-                HostName = expectedHostName,
+                Name = expectedName,
                 HostIP = expectedHostIP,
                 UserName = expectedUsername,
                 Password = expectedPassword,
@@ -46,7 +47,7 @@ namespace fw_monitor.test
             NFT_SshConnector nftSshConnector = new NFT_SshConnector(generateDummyNftConfig());
 
             Assert.Equal(expectedEmpty, nftSshConnector.Empty);
-            Assert.Equal(expectedHostName, nftSshConnector.HostName);
+            Assert.Equal(expectedName, nftSshConnector.HostName);
             Assert.Equal(expectedHostIP, nftSshConnector.HostIP);
             Assert.Equal(expectedUsername, nftSshConnector.Username);
             Assert.Equal(expectedPassword, nftSshConnector.Password);

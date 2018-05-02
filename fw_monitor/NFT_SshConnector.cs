@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security;
+using fw_monitor.DataObjects;
 using Renci.SshNet;
 
 namespace fw_monitor
@@ -15,7 +16,7 @@ namespace fw_monitor
 
         
         public bool Empty => HostConfig.Empty; 
-        public string HostName => HostConfig.HostName;
+        public string HostName => HostConfig.Name;
         public string HostIP => HostConfig.HostIP;
         public bool ConnectUsingIP => HostConfig.ConnectUsingIP;
         public string Username => HostConfig.UserName;

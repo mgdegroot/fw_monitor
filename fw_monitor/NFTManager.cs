@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using fw_monitor.DataObjects;
 
 namespace fw_monitor
 {
@@ -69,27 +71,33 @@ namespace fw_monitor
 
         private ListConfig getListConfig(string listName=null, bool interactive=false)
         {
+            ListConfigRepository listConfigRepo = (ListConfigRepository) RepositoryBase.GetInstance(typeof(ListConfigRepository));
             if (!interactive)
             {
-                return ListConfigRepository.Get(listName);
+                return (ListConfig)listConfigRepo.Get(listName);
             }
             else
             {
                 ListConfig foundList = null;
-                bool createNew = ConsoleHelper.readInputAsBool("Load existing config (y/n)?", "n");
 
-                if (createNew)
+                if (ConsoleHelper.ReadInputAsBool("Create new (y/n)?", "n"))
                 {
-                    //
+                    do
+                    {
+                        foundList = (ListConfig) listConfigRepo.CreateNew(listName);
+                    }while(!ConsoleHelper.ReadInputAsBool($"Found list with URL {foundList.URL}. Correct(y/n)?", "y"));
                 }
-                do
+                else
                 {
-                    
-                    listName = ConsoleHelper.readInput("list", listName);
-                    foundList = ListConfigRepository.Get(listName);
+                    do
+                    {
 
-                    
-                } while (!ConsoleHelper.readInputAsBool($"Found list with URL {foundList.URL}. Correct(y/n)?", "y"));
+                        listName = ConsoleHelper.ReadInput("list", listName);
+                        foundList = (ListConfig) listConfigRepo.Get(listName);
+
+                    } while (!ConsoleHelper.ReadInputAsBool($"Found list with URL {foundList.URL}. Correct(y/n)?",
+                        "y"));
+                }
 
                 return foundList;
             }
@@ -97,9 +105,10 @@ namespace fw_monitor
         
         private HostConfig getHostConfig(string hostName=null, bool interactive=false)
         {
+            HostConfigRepository hostConfigRepo = (HostConfigRepository)RepositoryBase.GetInstance(typeof(HostConfigRepository));
             if (!interactive)
             {
-                return HostConfigRepository.Get(hostName);
+                return (HostConfig) hostConfigRepo.Get(hostName);
             }
             else
             {
@@ -107,14 +116,15 @@ namespace fw_monitor
                 
                 do
                 {
-                    hostName = ConsoleHelper.readInput("hostname", hostName);
-                    foundConfig = HostConfigRepository.Get(hostName);
+                    hostName = ConsoleHelper.ReadInput("hostname", hostName);
+                    foundConfig = (HostConfig)hostConfigRepo.Get(hostName);
+                    
                     if (foundConfig == null)
                     {
-                        foundConfig = HostConfigRepository.ReadFromSTDIN();
+                        foundConfig = (HostConfig)hostConfigRepo.CreateNew(hostName);
                     }
 
-                } while (!ConsoleHelper.readInputAsBool($"Found host {hostName} with IP {foundConfig.HostIP} and config {foundConfig.GetFormattedConfig(false)}. Correct(y/n)?", "y"));
+                } while (!ConsoleHelper.ReadInputAsBool($"Found host {hostName} with IP {foundConfig.HostIP} and config {foundConfig.GetFormattedConfig(false)}. Correct(y/n)?", "y"));
 
                 return foundConfig;
             }
@@ -126,7 +136,7 @@ namespace fw_monitor
             nftSshConnector.ErrorAdded += nftSsh_ErrorAdded;
             nftSshConnector.OutputAdded += nftSsh_OutputAdded;
             
-            Console.WriteLine($"Adding elements to nft host {hostConfig.HostName} at IP {hostConfig.HostIP}...");
+            Console.WriteLine($"Adding elements to nft host {hostConfig.Name} at IP {hostConfig.HostIP}...");
 //            int handle = nftSshConnector.findRuleHandle("", "inet filter input", "testset");
             bool result = nftSshConnector.AddElementsSequentially(null, lines);
         }

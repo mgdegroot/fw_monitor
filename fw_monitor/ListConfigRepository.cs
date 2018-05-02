@@ -1,115 +1,140 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.Text;
 using System.Text.RegularExpressions;
+using fw_monitor.DataObjects;
 
 namespace fw_monitor
 {
-    public static class ListConfigRepository
+    public class ListConfigRepository : RepositoryBase, IRepository
     {
-        public static Dictionary<string, ListConfig> Repository { get; private set; } = new Dictionary<string, ListConfig>();
+//        private static ListConfigRepository _instance = null;
+//        public override IRepository Instance
+//        {
+//            get
+//            {
+//                if (_instance == null)
+//                {
+//                    _instance = new ListConfigRepository();
+//                }
+//
+//                return _instance;
+//            }
+//        }
 
-        static ListConfigRepository()
+        public override Dictionary<string, Config> Repository { get; set; } = new Dictionary<string, Config>();
+
+//        private ListConfigRepository()
+//        {
+//            loadRepoFromRepoDir();
+//        }
+
+        public override Config Get(string listName)
         {
-            fillDefaults();
+            Repository.TryGetValue(listName, out Config retVal);
+            return retVal;
         }
 
-        public static ListConfig ReadFromSTDIN()
+        public override void Set(Config listConfig)
+        {
+            Repository[listConfig.Name] = listConfig;
+            
+            string strConf = serialize(listConfig as ListConfig);
+            writeToFile(Path.Combine(REPO_BASE_PATH, listConfig.Name + REPO_FILE_EXTENSION), strConf);
+        }
+
+        public override Config CreateNew(string name)
+        {
+            return readFromSTDIN(name);
+        }
+
+        private string serialize(ListConfig listConfig)
+        {
+            // serializing here so set 'NewEntry' to false -->
+            listConfig.Empty = false;
+            MemoryStream memoryStream = new MemoryStream();
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(ListConfig));
+            serializer.WriteObject(memoryStream, listConfig);
+
+            byte[] json = memoryStream.ToArray();
+            memoryStream.Close();
+            return Encoding.UTF8.GetString(json, 0, json.Length);
+            throw new NotImplementedException("Nog niet");
+        }
+
+        private ListConfig deserialize(string json)
+        {
+            MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(ListConfig));
+            ListConfig listConfig = (ListConfig)serializer.ReadObject(memoryStream) as ListConfig;
+
+            return listConfig;
+        }
+        
+        private static ListConfig readFromSTDIN(string name=null)
         {
             ListConfig listConfig = new ListConfig();
 
-            listConfig.Name = ConsoleHelper.readInput("name");
-            listConfig.Description = ConsoleHelper.readInput("description");
-            listConfig.URL = new Uri(ConsoleHelper.readInput("URL"));
-            listConfig.IsComposite = ConsoleHelper.readInputAsBool("contains sublists (y/n)");
+            listConfig.Name = ConsoleHelper.ReadInput("name", name);
+            listConfig.Description = ConsoleHelper.ReadInput("description");
+            listConfig.URL = new Uri(ConsoleHelper.ReadInput("URL"));
+            listConfig.IsComposite = ConsoleHelper.ReadInputAsBool("contains sublists (y/n)");
             if (listConfig.IsComposite)
             {
-                listConfig.SubsetHeader = new Regex(ConsoleHelper.readInput("regex for subset name"));
+                listConfig.SubsetHeader = new Regex(ConsoleHelper.ReadInput("regex for subset name"));
             }
-            listConfig.IsRevisioned = ConsoleHelper.readInputAsBool("is versioned (y/n");
+            listConfig.IsRevisioned = ConsoleHelper.ReadInputAsBool("is versioned (y/n");
             if (listConfig.IsRevisioned)
             {
-                listConfig.RevisionRegex = new Regex(ConsoleHelper.readInput("regex for version number"));
+                listConfig.RevisionRegex = new Regex(ConsoleHelper.ReadInput("regex for version number"));
             }
 
             return listConfig;
         }
 
-        public static ListConfig Get(string listName)
-        {
-            Repository.TryGetValue(listName, out ListConfig retVal);
-            return retVal;
-        }
-        
-        public static void Serialize()
-        {
-            throw new NotImplementedException("Nog niet");
-        }
-
-        public static string Deserialize()
-        {
-            throw new NotImplementedException("Nog niet");
-        }
-
-        private static void fillDefaults()
-        {
-            ListConfig nwConfig = new ListConfig()
-            {
-                Name = "emergingthreats",
-                Description = "Emerging Threats combined blocklist",
-                URL = new Uri(@"https://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt"),
-                IsComposite = true,
-                IsRevisioned = true,
-                LineSeparator = Environment.NewLine,
-                RevisionRegex = new Regex(@"^# Rev (\d*)$"),
-                SubsetHeader = new Regex(@"^#\s*(\w*)\s*$"),
-//                SubsetSeparator = "#",
-            };
-
-            Repository[nwConfig.Name] = nwConfig;
-            
-            nwConfig = new ListConfig()
-            {
-                Name = "locallist",
-                Description = "Locally hosted list for testing",
-                URL = new Uri(@"http://localhost/emerging_threats.txt"),
-                IsComposite = true,
-                IsRevisioned = true,
-                LineSeparator = Environment.NewLine,
-                RevisionRegex = new Regex(@"^# Rev (\d*)$"),
-                SubsetHeader =  new Regex(@"^#\s*(\w*)\s*$"),
-//                SubsetSeparator = "#",
-            };
-
-            Repository[nwConfig.Name] = nwConfig;
-
-        }
-
-    }
-
-    public class ListConfig
-    {
-        public ListConfig()
+        private void loadRepoFromRepoDir()
         {
             
         }
-        public ListConfig(string name, Uri url = null)
-        {
-            Name = name;
-            URL = url;
-        }
-        
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public Uri URL { get; set; }
-        public bool IsComposite { get; set; } = false;
-        public bool IsRevisioned { get; set; } = false;
-        public Regex RevisionRegex { get; set; }
-        public Regex SubsetHeader { get; set; }
-        public Regex InvalidListnameChars { get; set; } = new Regex(@"[^A-Za-z0-9\-_]");
 
-        public string InvalidCharReplacement { get; set; } = "_";
-//        public string SubsetSeparator { get; set; } = "#";
-        public string LineSeparator { get; set; } = Environment.NewLine;
+//        private static void fillDefaults()
+//        {
+//            ListConfig nwConfig = new ListConfig()
+//            {
+//                Name = "emergingthreats",
+//                Description = "Emerging Threats combined blocklist",
+//                URL = new Uri(@"https://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt"),
+//                IsComposite = true,
+//                IsRevisioned = true,
+//                LineSeparator = Environment.NewLine,
+//                RevisionRegex = new Regex(@"^# Rev (\d*)$"),
+//                SubsetHeader = new Regex(@"^#\s*(\w*)\s*$"),
+////                SubsetSeparator = "#",
+//            };
+//
+//            Repository[nwConfig.Name] = nwConfig;
+//            
+//            nwConfig = new ListConfig()
+//            {
+//                Name = "locallist",
+//                Description = "Locally hosted list for testing",
+//                URL = new Uri(@"http://localhost/emerging_threats.txt"),
+//                IsComposite = true,
+//                IsRevisioned = true,
+//                LineSeparator = Environment.NewLine,
+//                RevisionRegex = new Regex(@"^# Rev (\d*)$"),
+//                SubsetHeader =  new Regex(@"^#\s*(\w*)\s*$"),
+////                SubsetSeparator = "#",
+//            };
+//
+//            Repository[nwConfig.Name] = nwConfig;
+//
+//        }
 
     }
+
+    
 }

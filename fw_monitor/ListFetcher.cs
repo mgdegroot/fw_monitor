@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using fw_monitor.DataObjects;
 
 namespace fw_monitor
 {
