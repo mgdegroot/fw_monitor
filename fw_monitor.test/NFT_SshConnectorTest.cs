@@ -20,9 +20,9 @@ namespace fw_monitor.test
             expectedEmpty = false,
             expectedUsePubkeyLogin = false;
         
-        private NftConfig generateDummyNftConfig()
+        private HostConfig generateDummyNftConfig()
         {
-            NftConfig retVal = new NftConfig()
+            HostConfig retVal = new HostConfig()
             {
                 Empty = expectedEmpty,
                 HostName = expectedHostName,

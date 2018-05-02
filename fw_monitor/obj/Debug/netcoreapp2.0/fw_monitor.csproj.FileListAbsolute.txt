@@ -1,0 +1,10 @@
+/home/marcel/src/fw_monitor/fw_monitor/bin/Debug/netcoreapp2.0/fw_monitor.deps.json
+/home/marcel/src/fw_monitor/fw_monitor/bin/Debug/netcoreapp2.0/fw_monitor.runtimeconfig.json
+/home/marcel/src/fw_monitor/fw_monitor/bin/Debug/netcoreapp2.0/fw_monitor.runtimeconfig.dev.json
+/home/marcel/src/fw_monitor/fw_monitor/bin/Debug/netcoreapp2.0/fw_monitor.dll
+/home/marcel/src/fw_monitor/fw_monitor/bin/Debug/netcoreapp2.0/fw_monitor.pdb
+/home/marcel/src/fw_monitor/fw_monitor/obj/Debug/netcoreapp2.0/fw_monitor.csproj.CoreCompileInputs.cache
+/home/marcel/src/fw_monitor/fw_monitor/obj/Debug/netcoreapp2.0/fw_monitor.AssemblyInfoInputs.cache
+/home/marcel/src/fw_monitor/fw_monitor/obj/Debug/netcoreapp2.0/fw_monitor.AssemblyInfo.cs
+/home/marcel/src/fw_monitor/fw_monitor/obj/Debug/netcoreapp2.0/fw_monitor.dll
+/home/marcel/src/fw_monitor/fw_monitor/obj/Debug/netcoreapp2.0/fw_monitor.pdb

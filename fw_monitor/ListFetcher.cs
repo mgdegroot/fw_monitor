@@ -12,6 +12,9 @@ namespace fw_monitor
 {
     public class ListFetcher
     {
+        public string CombinedListName { get; set; } = "COMBINED";
+
+
         public ListConfig Config { get; set; } = new ListConfig("empty");
         public Uri URL => Config.URL;
         public void setURL(string url) => Config.URL = new Uri(url);
@@ -21,7 +24,7 @@ namespace fw_monitor
         public List<string> Lines { get; private set; } = new List<string>();
         
         public Dictionary<string, List<string>> Lists { get; private set; } = new Dictionary<string, List<string>>();
-
+                
         public string LastError { get; private set; } = string.Empty;
         
         
@@ -107,9 +110,10 @@ namespace fw_monitor
             if (string.IsNullOrEmpty(Raw))
             {
                 LastError = "Content (Raw) is empty. Not converting...";
+                return;
             }
 
-            RawLines = Raw.Split("\n").Where(i => string.IsNullOrEmpty(i) == false).ToList();
+            RawLines = Raw.Split(Config.LineSeparator).Where(i => string.IsNullOrEmpty(i) == false).ToList();
 
 //            RawLines = new List<string>(lines);
             
@@ -132,8 +136,8 @@ namespace fw_monitor
             // Remove all comment fluff -->
             List<string> intermediate = RawLines.Where(i => (i.Trim() == "#") == false).ToList();
 
-            Regex regex;
-            string strMatchListRevision = @"^# Rev (\d*)$";
+
+            //string strMatchListRevision = @"^# Rev (\d*)$";
             int listRevision = 0;
             bool inBody = false;
             string listName = "noname";
@@ -141,12 +145,13 @@ namespace fw_monitor
             {
                 if (!inBody)
                 {
-                    Match match = Regex.Match(intermediate[i], strMatchListRevision);
+                    Match match = Config.RevisionRegex.Match(intermediate[i]);
+//                    Match match = Regex.Match(intermediate[i], strMatchListRevision);
                     if (match.Success)
                     {
                         int.TryParse(match.Groups[1].Value, out listRevision);
                         inBody = true;
-                        continue;
+//                        continue;
                     }
 //                    Console.WriteLine($"Match.value: {match.Value}\r\nMatch.Groups[1].Value: {match.Groups[1].Value}");
 //                    
@@ -158,15 +163,18 @@ namespace fw_monitor
 //                        continue;
 //                    }
                 }
-                else 
+                else
                 {
-                    if (intermediate[i].StartsWith('#'))
+                    Match subsetMatch = Config.SubsetHeader.Match(intermediate[i]);
+                    if (subsetMatch.Success)
+//                    if (intermediate[i].StartsWith('#'))
                     {
-                        listName = intermediate[i].Substring(1).Trim();
+                        listName = subsetMatch.Groups[1].Value;
+//                        listName = intermediate[i].Substring(1).Trim();
                         // Limit listname to alphanumerical -->
-                        string regExInvalidChars = @"[^A-Za-z0-9\-_]";
-                        
-                        listName = Regex.Replace(listName, regExInvalidChars, "_");
+//                        string regExInvalidChars = @"[^A-Za-z0-9\-_]";
+                        listName = Config.InvalidListnameChars.Replace(listName, Config.InvalidCharReplacement);
+//                        listName = Regex.Replace(listName, regExInvalidChars, "_");
                         Lists[listName] = new List<string>();
                     }
                     else
@@ -176,7 +184,8 @@ namespace fw_monitor
                 }
             }
 
-            Lists["COMBINED"] = Lines;
+            CombinedListName = "dd";
+            Lists[CombinedListName] = Lines;
 
         }
 

@@ -11,41 +11,26 @@ namespace fw_monitor
 
         public async Task ManageLists(string listConfigName = null, string hostConfigName = null, bool interactive = true)
         {
-            ListConfig listConfig = null;
-            NftConfig hostConfig = null;
-            
             if (!interactive)
             {
                 if (string.IsNullOrEmpty(listConfigName) || string.IsNullOrEmpty(hostConfigName))
                 {
                     throw new ArgumentException("If not interactive configNames need to be set.");
                 }
-
-                listConfig = ListConfigRepository.Get(listConfigName);
-                hostConfig = HostConfigRepository.Get(hostConfigName);
             }
-            else
-            {
-                listConfig = getListConfig();
-                if (listConfig == null)
-                {
-                    Console.WriteLine("No config selected. Exiting...");
-                    Environment.Exit(1);
-                }
-            
-                hostConfig = getRemoteHostConfig();
-                
-                string answer = readEntry("Flush chain containing sets first (y/n)?", "n");
 
-                if (answer.ToLower().Contains("y"))
-                {
-                    hostConfig.FlushChain = true;
-                    
-                }
-                else
-                {
-                    hostConfig.FlushChain = false;
-                }
+            
+            ListConfig listConfig = getListConfig(listConfigName, interactive);
+            HostConfig hostConfig = getHostConfig(hostConfigName, interactive);
+            
+            if (listConfig == null)
+            {
+                
+            }
+
+            if (hostConfig == null)
+            {
+                
             }
 
             Dictionary<string, List<string>> lists = await fetchList(listConfig);
@@ -59,7 +44,6 @@ namespace fw_monitor
             connector.ErrorAdded += nftSsh_ErrorAdded;
             connector.OutputAdded += nftSsh_OutputAdded;
             
-
             
             foreach (string name in lists.Keys.Where(i => i != "COMBINED"))
             {
@@ -80,7 +64,6 @@ namespace fw_monitor
                 }
 
                 connector.createRuleReferencingSet(name);
-
             }
         }
 
@@ -93,114 +76,57 @@ namespace fw_monitor
             else
             {
                 ListConfig foundList = null;
-                bool correctList = false;
-                
+                bool createNew = ConsoleHelper.readInputAsBool("Load existing config (y/n)?", "n");
+
+                if (createNew)
+                {
+                    //
+                }
                 do
                 {
-                    listName = readEntry("list", "emergingthreats");
+                    
+                    listName = ConsoleHelper.readInput("list", listName);
                     foundList = ListConfigRepository.Get(listName);
 
-                    correctList = readEntry($"Found list with URL {foundList.URL}. Correct?", "y").ToLower()
-                        .Contains("y");
-                } while (!correctList);
+                    
+                } while (!ConsoleHelper.readInputAsBool($"Found list with URL {foundList.URL}. Correct(y/n)?", "y"));
 
                 return foundList;
             }
         }
         
-        private NftConfig getRemoteHostConfig()
+        private HostConfig getHostConfig(string hostName=null, bool interactive=false)
         {
-            string hostName = readEntry("hostname", null);
-            
-//            HostConfigRepository hostConfigRepository = new HostConfigRepository();
-
-            NftConfig testConfig = HostConfigRepository.Get(hostName);
-
-            if (testConfig.Empty)
+            if (!interactive)
             {
-                askForInput(testConfig);
+                return HostConfigRepository.Get(hostName);
+            }
+            else
+            {
+                HostConfig foundConfig = null;
                 
-                while (!confirmInput(testConfig))
+                do
                 {
-                    askForInput(testConfig);
-                }
+                    hostName = ConsoleHelper.readInput("hostname", hostName);
+                    foundConfig = HostConfigRepository.Get(hostName);
+                    if (foundConfig == null)
+                    {
+                        foundConfig = HostConfigRepository.ReadFromSTDIN();
+                    }
 
-                HostConfigRepository.SetConfig(testConfig);
-            }
-            else
-            {
-                if (!confirmInput(testConfig))
-                {
-                    Environment.Exit(1);
-                }
-                else
-                {
-                    Console.WriteLine($"Using config {testConfig.GetFormattedConfig(true)}...");
-                }
-            }
+                } while (!ConsoleHelper.readInputAsBool($"Found host {hostName} with IP {foundConfig.HostIP} and config {foundConfig.GetFormattedConfig(false)}. Correct(y/n)?", "y"));
 
-            return testConfig;
-
-        }
-
-        private void askForInput(NftConfig nftConfig)
-        {
-            nftConfig.HostName = readEntry("hostname", nftConfig.HostName);
-            nftConfig.HostIP = readEntry("host ip", nftConfig.HostIP);
-            nftConfig.UserName = readEntry("username", nftConfig.UserName);
-            nftConfig.Password = readEntry("password", nftConfig.Password);
-            nftConfig.CertPath = readEntry("certificate path", nftConfig.CertPath);
-            nftConfig.TableName = readEntry("table name", nftConfig.TableName);
-            nftConfig.ChainName = readEntry("chain name", nftConfig.ChainName);
-            nftConfig.FlushChain = readEntry("flush chain", nftConfig.FlushChain ? "y" : "n").ToLower().Contains("y");
-            nftConfig.SetName = readEntry("set name", nftConfig.SetName);
-            nftConfig.SupportsFlush = readEntry("supports flush", nftConfig.SupportsFlush ? "y" : "n").ToLower().Contains("y");
-            nftConfig.UsePubkeyLogin = String.IsNullOrEmpty(nftConfig.CertPath) == false;
-        }
-
-        private bool confirmInput(NftConfig nftConfig)
-        {
-            string answer =
-                readEntry($"Received this config:\r\n{nftConfig.GetFormattedConfig(false)}\r\n\r\nCorrect (y/n)?");
-
-            return answer.ToLower().Contains("y");
-        }
-
-        private string readEntry(string entry, string defaultValue = null)
-        {
-            
-            if (String.IsNullOrEmpty(defaultValue))
-            {
-                Console.Write($"{entry}: ");
-//                Console.In.
-            }
-            else
-            {
-                Console.Write($"{entry} ({defaultValue}): ");    
-            }
-            
-            string input = Console.ReadLine();
-            while (Console.KeyAvailable)
-            {
-                Console.ReadKey(true);
-            }
-            if (string.IsNullOrEmpty(input))
-            {
-                return defaultValue;
-            }
-            else
-            {
-                return input;
+                return foundConfig;
             }
         }
 
-        private void updateRemoteConfig(NftConfig nftConfig, List<string>lines)
+        private void updateRemoteConfig(HostConfig hostConfig, List<string>lines)
         {
-            NFT_SshConnector nftSshConnector = new NFT_SshConnector(nftConfig);
+            NFT_SshConnector nftSshConnector = new NFT_SshConnector(hostConfig);
             nftSshConnector.ErrorAdded += nftSsh_ErrorAdded;
             nftSshConnector.OutputAdded += nftSsh_OutputAdded;
             
-            Console.WriteLine($"Adding elements to nft host {nftConfig.HostName} at IP {nftConfig.HostIP}...");
+            Console.WriteLine($"Adding elements to nft host {hostConfig.HostName} at IP {hostConfig.HostIP}...");
 //            int handle = nftSshConnector.findRuleHandle("", "inet filter input", "testset");
             bool result = nftSshConnector.AddElementsSequentially(null, lines);
         }

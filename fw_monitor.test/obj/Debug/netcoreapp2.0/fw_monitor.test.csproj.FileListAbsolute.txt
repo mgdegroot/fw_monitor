@@ -1,0 +1,16 @@
+/home/marcel/src/fw_monitor/fw_monitor.test/bin/Debug/netcoreapp2.0/xunit.runner.visualstudio.dotnetcore.testadapter.dll
+/home/marcel/src/fw_monitor/fw_monitor.test/bin/Debug/netcoreapp2.0/xunit.runner.reporters.netcoreapp10.dll
+/home/marcel/src/fw_monitor/fw_monitor.test/bin/Debug/netcoreapp2.0/xunit.runner.utility.netcoreapp10.dll
+/home/marcel/src/fw_monitor/fw_monitor.test/bin/Debug/netcoreapp2.0/fw_monitor.test.deps.json
+/home/marcel/src/fw_monitor/fw_monitor.test/bin/Debug/netcoreapp2.0/fw_monitor.test.runtimeconfig.json
+/home/marcel/src/fw_monitor/fw_monitor.test/bin/Debug/netcoreapp2.0/fw_monitor.test.runtimeconfig.dev.json
+/home/marcel/src/fw_monitor/fw_monitor.test/bin/Debug/netcoreapp2.0/fw_monitor.test.dll
+/home/marcel/src/fw_monitor/fw_monitor.test/bin/Debug/netcoreapp2.0/fw_monitor.test.pdb
+/home/marcel/src/fw_monitor/fw_monitor.test/obj/Debug/netcoreapp2.0/fw_monitor.test.csproj.CoreCompileInputs.cache
+/home/marcel/src/fw_monitor/fw_monitor.test/obj/Debug/netcoreapp2.0/fw_monitor.test.AssemblyInfoInputs.cache
+/home/marcel/src/fw_monitor/fw_monitor.test/obj/Debug/netcoreapp2.0/fw_monitor.test.AssemblyInfo.cs
+/home/marcel/src/fw_monitor/fw_monitor.test/obj/Debug/netcoreapp2.0/fw_monitor.test.dll
+/home/marcel/src/fw_monitor/fw_monitor.test/obj/Debug/netcoreapp2.0/fw_monitor.test.pdb
+/home/marcel/src/fw_monitor/fw_monitor.test/bin/Debug/netcoreapp2.0/fw_monitor.dll
+/home/marcel/src/fw_monitor/fw_monitor.test/bin/Debug/netcoreapp2.0/fw_monitor.pdb
+/home/marcel/src/fw_monitor/fw_monitor.test/obj/Debug/netcoreapp2.0/fw_monitor.test.csproj.CopyComplete

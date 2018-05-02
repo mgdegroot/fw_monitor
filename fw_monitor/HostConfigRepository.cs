@@ -13,11 +13,11 @@ namespace fw_monitor
         
         // TODO: move to config file -->
         private static string REPO_BASE_PATH = Environment.GetEnvironmentVariable("HOME") + "/NftHosts/";
-        public static Dictionary<string, NftConfig> Repository { get; private set; } = new Dictionary<string, NftConfig>();
+        public static Dictionary<string, HostConfig> Repository { get; private set; } = new Dictionary<string, HostConfig>();
         
-        public static NftConfig Get(string hostname)
+        public static HostConfig Get(string hostname)
         {
-            Repository.TryGetValue(hostname, out NftConfig nftConfig);
+            Repository.TryGetValue(hostname, out HostConfig nftConfig);
 
             if (nftConfig == null)
             {
@@ -30,7 +30,8 @@ namespace fw_monitor
                 }
                 else
                 {
-                    return new NftConfig() {HostName = hostname, Empty = true};
+                    return null;
+//                    return new HostConfig() {HostName = hostname, Empty = true};
                 }
                 
             }
@@ -38,34 +39,53 @@ namespace fw_monitor
             return nftConfig;
         }
 
-        public static void SetConfig(NftConfig nftConfig)
+        public static void SetConfig(HostConfig hostConfig)
         {
-            Repository[nftConfig.HostName] = nftConfig;
-            string strConf = serialize(nftConfig);
-            writeToFile(Path.Combine(REPO_BASE_PATH, nftConfig.HostName + REPO_FILE_EXTENSION), strConf);
+            Repository[hostConfig.HostName] = hostConfig;
+            string strConf = serialize(hostConfig);
+            writeToFile(Path.Combine(REPO_BASE_PATH, hostConfig.HostName + REPO_FILE_EXTENSION), strConf);
         }
         
-        private static string serialize(NftConfig nftConfig)
+        public static HostConfig ReadFromSTDIN()
+        {
+            HostConfig hostConfig = new HostConfig();
+            hostConfig.HostName = ConsoleHelper.readInput("hostname", hostConfig.HostName);
+            hostConfig.HostIP = ConsoleHelper.readInput("host ip", hostConfig.HostIP);
+            hostConfig.UserName = ConsoleHelper.readInput("username", hostConfig.UserName);
+            hostConfig.Password = ConsoleHelper.readInput("password", hostConfig.Password);
+            hostConfig.CertPath = ConsoleHelper.readInput("certificate path", hostConfig.CertPath);
+            hostConfig.TableName = ConsoleHelper.readInput("table name", hostConfig.TableName);
+            hostConfig.ChainName = ConsoleHelper.readInput("chain name", hostConfig.ChainName);
+            hostConfig.FlushChain = ConsoleHelper.readInputAsBool("flush chain", hostConfig.FlushChain ? "y" : "n");
+            hostConfig.SetName = ConsoleHelper.readInput("set name", hostConfig.SetName);
+            hostConfig.SupportsFlush = ConsoleHelper.readInputAsBool("supports flush", hostConfig.SupportsFlush ? "y" : "n");
+            
+            hostConfig.UsePubkeyLogin = String.IsNullOrEmpty(hostConfig.CertPath) == false;
+
+            return hostConfig;
+        }
+        
+        private static string serialize(HostConfig hostConfig)
         {
             // serializing here so set 'NewEntry' to false -->
-            nftConfig.Empty = false;
+            hostConfig.Empty = false;
             MemoryStream memoryStream = new MemoryStream();
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(NftConfig));
-            serializer.WriteObject(memoryStream, nftConfig);
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(HostConfig));
+            serializer.WriteObject(memoryStream, hostConfig);
 
             byte[] json = memoryStream.ToArray();
             memoryStream.Close();
             return Encoding.UTF8.GetString(json, 0, json.Length);
         }
 
-        private static NftConfig deserialize(string json)
+        private static HostConfig deserialize(string json)
         {
             
             MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(NftConfig));
-            NftConfig nftConfig = (NftConfig)serializer.ReadObject(memoryStream) as NftConfig;
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(HostConfig));
+            HostConfig hostConfig = (HostConfig)serializer.ReadObject(memoryStream) as HostConfig;
 
-            return nftConfig;
+            return hostConfig;
         }
 
         private static string readFromFile(string path)
@@ -78,13 +98,14 @@ namespace fw_monitor
         {
             File.WriteAllText(path, content, Encoding.UTF8);
         }
+
         
     }
     
     
 
     [DataContract]
-    public class NftConfig
+    public class HostConfig
     {
         [DataMember(Order = 0)] public bool Empty { get; set; } = true;
     

@@ -11,23 +11,23 @@ namespace fw_monitor
 {
     public class NFT_SshConnector
     {
-        public NftConfig NftConfig { get; set; }
+        public HostConfig HostConfig { get; set; }
 
         
-        public bool Empty => NftConfig.Empty; 
-        public string HostName => NftConfig.HostName;
-        public string HostIP => NftConfig.HostIP;
-        public bool ConnectUsingIP => NftConfig.ConnectUsingIP;
-        public string Username => NftConfig.UserName;
-        public string Password => NftConfig.Password; 
+        public bool Empty => HostConfig.Empty; 
+        public string HostName => HostConfig.HostName;
+        public string HostIP => HostConfig.HostIP;
+        public bool ConnectUsingIP => HostConfig.ConnectUsingIP;
+        public string Username => HostConfig.UserName;
+        public string Password => HostConfig.Password; 
 
         // TODO: pubkey auth implementation -->
-        public string CertPath => NftConfig.CertPath; 
-        public bool UsePubkeyLogin => NftConfig.UsePubkeyLogin;
-        public string Table => NftConfig.TableName;
-        public string Chain => NftConfig.ChainName;
-        public string Set => NftConfig.SetName;
-        public bool SupportsFlush => NftConfig.SupportsFlush;
+        public string CertPath => HostConfig.CertPath; 
+        public bool UsePubkeyLogin => HostConfig.UsePubkeyLogin;
+        public string Table => HostConfig.TableName;
+        public string Chain => HostConfig.ChainName;
+        public string Set => HostConfig.SetName;
+        public bool SupportsFlush => HostConfig.SupportsFlush;
 
         public IEnumerable<string> Errors => errors;
         public IEnumerable<string> Output => output;
@@ -74,17 +74,17 @@ namespace fw_monitor
             REJECT,
         }
 
-        public NFT_SshConnector(NftConfig nftConfig)
+        public NFT_SshConnector(HostConfig hostConfig)
         {
-            this.NftConfig = nftConfig;
-            if (NftConfig.UsePubkeyLogin)
+            this.HostConfig = hostConfig;
+            if (HostConfig.UsePubkeyLogin)
             {
-                connectionInfo = new ConnectionInfo(host: NftConfig.HostIP, username: NftConfig.UserName, new PrivateKeyAuthenticationMethod(NftConfig.CertPath) );
+                connectionInfo = new ConnectionInfo(host: HostConfig.HostIP, username: HostConfig.UserName, new PrivateKeyAuthenticationMethod(HostConfig.CertPath) );
             }
             else
             {
-                connectionInfo = new ConnectionInfo(host: NftConfig.HostIP, username: NftConfig.UserName,
-                    new PasswordAuthenticationMethod(username: NftConfig.UserName, password: NftConfig.Password));
+                connectionInfo = new ConnectionInfo(host: HostConfig.HostIP, username: HostConfig.UserName,
+                    new PasswordAuthenticationMethod(username: HostConfig.UserName, password: HostConfig.Password));
             }
         }
 
@@ -223,7 +223,7 @@ namespace fw_monitor
             {
                 chain = Chain;
             }
-
+            
             string cmd = $"sudo nft flush chain {Table} {chain}";
             (bool _, string _) = execSshCommand(cmd);
         }

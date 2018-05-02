@@ -13,6 +13,27 @@ namespace fw_monitor
             fillDefaults();
         }
 
+        public static ListConfig ReadFromSTDIN()
+        {
+            ListConfig listConfig = new ListConfig();
+
+            listConfig.Name = ConsoleHelper.readInput("name");
+            listConfig.Description = ConsoleHelper.readInput("description");
+            listConfig.URL = new Uri(ConsoleHelper.readInput("URL"));
+            listConfig.IsComposite = ConsoleHelper.readInputAsBool("contains sublists (y/n)");
+            if (listConfig.IsComposite)
+            {
+                listConfig.SubsetHeader = new Regex(ConsoleHelper.readInput("regex for subset name"));
+            }
+            listConfig.IsRevisioned = ConsoleHelper.readInputAsBool("is versioned (y/n");
+            if (listConfig.IsRevisioned)
+            {
+                listConfig.RevisionRegex = new Regex(ConsoleHelper.readInput("regex for version number"));
+            }
+
+            return listConfig;
+        }
+
         public static ListConfig Get(string listName)
         {
             Repository.TryGetValue(listName, out ListConfig retVal);
@@ -40,8 +61,8 @@ namespace fw_monitor
                 IsRevisioned = true,
                 LineSeparator = Environment.NewLine,
                 RevisionRegex = new Regex(@"^# Rev (\d*)$"),
-                SubsetHeader = new Regex(@"^#.*$"),
-                SubsetSeparator = "#",
+                SubsetHeader = new Regex(@"^#\s*(\w*)\s*$"),
+//                SubsetSeparator = "#",
             };
 
             Repository[nwConfig.Name] = nwConfig;
@@ -54,8 +75,9 @@ namespace fw_monitor
                 IsComposite = true,
                 IsRevisioned = true,
                 LineSeparator = Environment.NewLine,
-                RevisionRegex = null,
-                SubsetSeparator = "#",
+                RevisionRegex = new Regex(@"^# Rev (\d*)$"),
+                SubsetHeader =  new Regex(@"^#\s*(\w*)\s*$"),
+//                SubsetSeparator = "#",
             };
 
             Repository[nwConfig.Name] = nwConfig;
@@ -83,7 +105,10 @@ namespace fw_monitor
         public bool IsRevisioned { get; set; } = false;
         public Regex RevisionRegex { get; set; }
         public Regex SubsetHeader { get; set; }
-        public string SubsetSeparator { get; set; } = "#";
+        public Regex InvalidListnameChars { get; set; } = new Regex(@"[^A-Za-z0-9\-_]");
+
+        public string InvalidCharReplacement { get; set; } = "_";
+//        public string SubsetSeparator { get; set; } = "#";
         public string LineSeparator { get; set; } = Environment.NewLine;
 
     }
