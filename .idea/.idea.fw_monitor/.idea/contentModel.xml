@@ -36,6 +36,7 @@
       </e>
       <e p="fw_monitor.sln" t="IncludeFlat" />
       <e p="fw_monitor.test" t="IncludeRecursive">
+        <e p="ConfigTest.cs" t="Include" />
         <e p="ListConfigRepositoryTest.cs" t="Include" />
         <e p="ListFetcherTest.cs" t="Include" />
         <e p="NFT_SshConnectorTest.cs" t="Include" />
