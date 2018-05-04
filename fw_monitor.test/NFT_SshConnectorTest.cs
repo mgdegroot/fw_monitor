@@ -18,14 +18,12 @@ namespace fw_monitor.test
 
         private bool 
             expectedSupportsFlush = true,
-            expectedEmpty = false,
             expectedUsePubkeyLogin = false;
         
         private HostConfig generateDummyNftConfig()
         {
             HostConfig retVal = new HostConfig()
             {
-                Empty = expectedEmpty,
                 Name = expectedName,
                 HostIP = expectedHostIP,
                 UserName = expectedUsername,
@@ -44,19 +42,18 @@ namespace fw_monitor.test
         [Fact]
         public void ConstructorTest()
         {
-            NFT_SshConnector nftSshConnector = new NFT_SshConnector(generateDummyNftConfig());
+            SshConnector sshConnector = new SshConnector(generateDummyNftConfig());
 
-            Assert.Equal(expectedEmpty, nftSshConnector.Empty);
-            Assert.Equal(expectedName, nftSshConnector.HostName);
-            Assert.Equal(expectedHostIP, nftSshConnector.HostIP);
-            Assert.Equal(expectedUsername, nftSshConnector.Username);
-            Assert.Equal(expectedPassword, nftSshConnector.Password);
-            Assert.Equal(expectedCertPath, nftSshConnector.CertPath);
-            Assert.Equal(expectedUsePubkeyLogin, nftSshConnector.UsePubkeyLogin);
-            Assert.Equal(expectedTableName, nftSshConnector.Table);
-            Assert.Equal(expectedChainName, nftSshConnector.Chain);
-            Assert.Equal(expectedSetName, nftSshConnector.Set);
-            Assert.Equal(expectedSupportsFlush, nftSshConnector.SupportsFlush);
+            Assert.Equal(expectedName, sshConnector.HostName);
+            Assert.Equal(expectedHostIP, sshConnector.HostIP);
+            Assert.Equal(expectedUsername, sshConnector.Username);
+            Assert.Equal(expectedPassword, sshConnector.Password);
+            Assert.Equal(expectedCertPath, sshConnector.CertPath);
+            Assert.Equal(expectedUsePubkeyLogin, sshConnector.UsePubkeyLogin);
+            Assert.Equal(expectedTableName, sshConnector.Table);
+            Assert.Equal(expectedChainName, sshConnector.Chain);
+            Assert.Equal(expectedSetName, sshConnector.Set);
+            Assert.Equal(expectedSupportsFlush, sshConnector.SupportsFlush);
         }
         
     }

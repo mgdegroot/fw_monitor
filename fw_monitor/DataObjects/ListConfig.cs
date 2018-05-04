@@ -7,29 +7,70 @@ namespace fw_monitor.DataObjects
     [DataContract]
     public class ListConfig : Config
     {
-        public ListConfig()
-        {
-            
-        }
-        public ListConfig(string name, Uri url = null)
-        {
-            Name = name;
-            URL = url;
-        }
+        [DataMember]
+        private string _revisionRegexStr = @"^# Rev (\d*)$";
+        [DataMember]
+        private string _subsetHeaderRegexStr = @"^#\s*(.*)\s*$";
+        [DataMember]
+        private string _invalidListnameCharsRegexStr = @"[^A-Za-z0-9\-_]";
+        [DataMember]
+        private string _emptyLineIndicatorRegexStr = @"^[#\s]*$";
         
-        [DataMember(Order = 0)] public bool Empty { get; set; } = true;
-        
-        [DataMember(Order = 1)] public override string Name { get; set; }
-        [DataMember(Order = 3)] public Uri URL { get; set; }
-        [DataMember(Order = 4)] public bool IsComposite { get; set; } = false;
-        [DataMember(Order = 5)] public bool IsRevisioned { get; set; } = false;
-        [DataMember(Order = 6)] public Regex RevisionRegex { get; set; }
-        [DataMember(Order = 7)] public Regex SubsetHeader { get; set; }
-        [DataMember(Order = 8)] public Regex InvalidListnameChars { get; set; } = new Regex(@"[^A-Za-z0-9\-_]");
+        // TODO: serialization has issues with RegEx. Implement custom (de)serialisation for complex types --> 
+        private Regex _invalidListnameChars;
+        private Regex _emptyLineIndicators;
+        private Regex _subsetHeader;
+        private Regex _revisionRegex;
+
+        [DataMember(Order = 2)] public Uri URL { get; set; }
+        [DataMember(Order = 3)] public bool IsComposite { get; set; } = false;
+        [DataMember(Order = 4)] public bool IsRevisioned { get; set; } = false;
+
+        public Regex RevisionRegex
+        {
+            get => _revisionRegex ?? (_revisionRegex = new Regex(_revisionRegexStr));
+            set => _revisionRegex = value;
+        }
+
+        public Regex SubsetHeader
+        {
+            get => _subsetHeader ?? (_subsetHeader = new Regex(_subsetHeaderRegexStr));
+            set => _subsetHeader = value;
+        }
+
+        public Regex InvalidListnameChars
+        {
+            get => _invalidListnameChars ?? (_invalidListnameChars = new Regex(_invalidListnameCharsRegexStr));
+            set => _invalidListnameChars = value;
+        }
+
+        public Regex EmptyLineIndicators
+        {
+            get => _emptyLineIndicators ?? (_emptyLineIndicators = new Regex(_emptyLineIndicatorRegexStr));
+            set => _emptyLineIndicators = value;
+        }
 
         [DataMember(Order = 9)] public string InvalidCharReplacement { get; set; } = "_";
-//        public string SubsetSeparator { get; set; } = "#";
         [DataMember(Order = 10)] public string LineSeparator { get; set; } = Environment.NewLine;
+
+        public string GetFormattedConfig(bool incSensitive = false)
+        {
+            return $@"[Name: {Name};
+Description: {Description};
+URL: {URL};
+IsComposite: {IsComposite};
+SubsetHeader: {_subsetHeaderRegexStr};
+IsRevisioned: {IsRevisioned};
+RevisionMatch: {_revisionRegexStr};
+InvalidChars: {_invalidListnameCharsRegexStr};
+EmptyLineIndicators: {_emptyLineIndicatorRegexStr};
+LineSeparator: {LineSeparator};
+]";
+        }
+
+        public override string ToString() => GetFormattedConfig(false);
+        public override bool Equals(object obj) => obj?.ToString() == ToString();
+        public override int GetHashCode() => GetFormattedConfig(true).GetHashCode();
 
     }
 }

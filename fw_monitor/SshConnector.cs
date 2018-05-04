@@ -10,12 +10,11 @@ using Renci.SshNet;
 
 namespace fw_monitor
 {
-    public class NFT_SshConnector
+    public class SshConnector : IConnector
     {
         public HostConfig HostConfig { get; set; }
 
         
-        public bool Empty => HostConfig.Empty; 
         public string HostName => HostConfig.Name;
         public string HostIP => HostConfig.HostIP;
         public bool ConnectUsingIP => HostConfig.ConnectUsingIP;
@@ -75,7 +74,7 @@ namespace fw_monitor
             REJECT,
         }
 
-        public NFT_SshConnector(HostConfig hostConfig)
+        public SshConnector(HostConfig hostConfig)
         {
             this.HostConfig = hostConfig;
             if (HostConfig.UsePubkeyLogin)
@@ -136,7 +135,7 @@ namespace fw_monitor
 
         
 
-        public void orchestrateActions()
+        public void OrchestrateActions()
         {
             throw new NotImplementedException("nog niet");
         }
@@ -201,7 +200,7 @@ namespace fw_monitor
         }
         
  
-        public int findRuleHandle(string fwConfig, string chain,string setName)
+        public int FindRuleHandle(string fwConfig, string chain,string setName)
         {
             string ruleSignature = $"ip [s|d]addr @{setName}";
             string cmdNftList = $"sudo nft list chain {chain} -a";
@@ -218,7 +217,7 @@ namespace fw_monitor
             return handle;
         }
 
-        public void flushChain(string chain)
+        public void FlushChain(string chain)
         {
             if (string.IsNullOrEmpty(chain))
             {
@@ -229,28 +228,28 @@ namespace fw_monitor
             (bool _, string _) = execSshCommand(cmd);
         }
 
-        public void deleteRule(string chain, int handle)
+        public void DeleteRule(string chain, int handle)
         {
             string cmd = $"sudo nft delete rule {chain} handle {handle}";
 
             (bool _, string _) = execSshCommand(cmd);
         }
 
-        public void deleteSet(string chain, string setName)
+        public void DeleteSet(string chain, string setName)
         {
             string cmd = $"sudo nft delete set {chain} {setName}";
 
             (bool _, string _) = execSshCommand(cmd);
         }
 
-        public void createChain(string table, string chainName)
+        public void CreateChain(string table, string chainName)
         {
             string cmd = $@"sudo nft add chain {table} {chainName}";
 
             (bool _, string _) = execSshCommand(cmd);
         }
 
-        public void createSet(string setName)
+        public void CreateSet(string setName)
         {
             // NOTE: semicolon (;) needs to be escaped in Bash -->
             string cmd = $@"sudo nft create set {Table} {setName} {{type ipv4_addr\; flags interval\;}}";
@@ -258,7 +257,7 @@ namespace fw_monitor
             (bool _, string _) = execSshCommand(cmd);
         }
 
-        public void createRuleReferencingSet(string setName, MatchDirection direction=MatchDirection.SOURCE, MatchAction action=MatchAction.DROP)
+        public void CreateRuleReferencingSet(string setName, MatchDirection direction=MatchDirection.SOURCE, MatchAction action=MatchAction.DROP)
         {
             string dirStr = direction == MatchDirection.DEST ? "daddr" : "saddr";
             string actStr = string.Empty;

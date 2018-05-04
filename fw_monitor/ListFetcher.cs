@@ -16,7 +16,7 @@ namespace fw_monitor
         public string CombinedListName { get; set; } = "COMBINED";
 
 
-        public ListConfig Config { get; set; } = new ListConfig("empty");
+        public ListConfig Config { get; set; } = new ListConfig();
         public Uri URL => Config.URL;
         public void setURL(string url) => Config.URL = new Uri(url);
 
@@ -96,7 +96,7 @@ namespace fw_monitor
                 client.Dispose();
             }
 
-            convertRawToList();
+//            convertRawToList();
         }
 
         private async Task orchestrateActions()
@@ -104,6 +104,7 @@ namespace fw_monitor
             await fetch();
             convertRawToList();
             cleanupList();
+            splitListInParts();
         }
 
         private void convertRawToList()
@@ -115,9 +116,6 @@ namespace fw_monitor
             }
 
             RawLines = Raw.Split(Config.LineSeparator).Where(i => string.IsNullOrEmpty(i) == false).ToList();
-
-//            RawLines = new List<string>(lines);
-            
         }
 
         private void cleanupList()
@@ -130,15 +128,18 @@ namespace fw_monitor
             Lines = RawLines.Where(i => i.StartsWith('#') == false).ToList();
         }
 
-        public void splitListInParts(string separator)
+        public void splitListInParts()
         {
-//            Dictionary<string, List<string>> lists = new Dictionary<string, List<string>>();
-            
             // Remove all comment fluff -->
-            List<string> intermediate = RawLines.Where(i => (i.Trim() == "#") == false).ToList();
+            // TODO: use LINQ expression to match all in collection at once iso foreach construct -->
+            List<string> intermediate = new List<string>();
+            
+//            foreach (string emptyLineIndicator in Config.EmptyLineIndicators)
+//            {
+//                intermediate.AddRange(RawLines.Where(i => (i.Trim() == emptyLineIndicator) == false).ToList());
+//            }
+            intermediate.AddRange(RawLines.Where(i => Config.EmptyLineIndicators.IsMatch(i) == false));
 
-
-            //string strMatchListRevision = @"^# Rev (\d*)$";
             int listRevision = 0;
             bool inBody = false;
             string listName = "noname";
@@ -147,35 +148,21 @@ namespace fw_monitor
                 if (!inBody)
                 {
                     Match match = Config.RevisionRegex.Match(intermediate[i]);
-//                    Match match = Regex.Match(intermediate[i], strMatchListRevision);
+
                     if (match.Success)
                     {
                         int.TryParse(match.Groups[1].Value, out listRevision);
                         inBody = true;
-//                        continue;
                     }
-//                    Console.WriteLine($"Match.value: {match.Value}\r\nMatch.Groups[1].Value: {match.Groups[1].Value}");
-//                    
-//                    if (intermediate[i].Contains("# Rev "))
-//                    {
-//                        int.TryParse(intermediate[i].Substring(6), out listRevision);
-//                        inBody = true;
-//                        // jump to start of loop to start processing content -->
-//                        continue;
-//                    }
                 }
                 else
                 {
                     Match subsetMatch = Config.SubsetHeader.Match(intermediate[i]);
                     if (subsetMatch.Success)
-//                    if (intermediate[i].StartsWith('#'))
                     {
                         listName = subsetMatch.Groups[1].Value;
-//                        listName = intermediate[i].Substring(1).Trim();
-                        // Limit listname to alphanumerical -->
-//                        string regExInvalidChars = @"[^A-Za-z0-9\-_]";
+
                         listName = Config.InvalidListnameChars.Replace(listName, Config.InvalidCharReplacement);
-//                        listName = Regex.Replace(listName, regExInvalidChars, "_");
                         Lists[listName] = new List<string>();
                     }
                     else
@@ -185,7 +172,6 @@ namespace fw_monitor
                 }
             }
 
-            CombinedListName = "dd";
             Lists[CombinedListName] = Lines;
 
         }

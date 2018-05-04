@@ -14,12 +14,10 @@ namespace fw_monitor
         
         static void Main(string[] args)
         {
-
-//            parseArgs(args);
-//            return;
             
             NFTManager manager = new NFTManager();
             manager.ManageLists(null, null, true);
+            Console.WriteLine("done");
         }
 
         class CmddLineOptions

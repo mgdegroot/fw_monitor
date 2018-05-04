@@ -9,41 +9,52 @@ using fw_monitor.DataObjects;
 
 namespace fw_monitor
 {
-    public class ListConfigRepository : RepositoryBase, IRepository
+    public class ListConfigRepository : Repository, IRepository
     {
-//        private static ListConfigRepository _instance = null;
-//        public override IRepository Instance
-//        {
-//            get
-//            {
-//                if (_instance == null)
-//                {
-//                    _instance = new ListConfigRepository();
-//                }
-//
-//                return _instance;
-//            }
-//        }
-
-        public override Dictionary<string, Config> Repository { get; set; } = new Dictionary<string, Config>();
-
-//        private ListConfigRepository()
-//        {
-//            loadRepoFromRepoDir();
-//        }
-
-        public override Config Get(string listName)
+        public ListConfigRepository()
         {
-            Repository.TryGetValue(listName, out Config retVal);
-            return retVal;
+            filenamePrefix = "list";
+        }
+        
+        public override Config this[string key]
+        {
+            get => Get(key);
+            set => Set(value);
+        }
+        
+        public override Config Get(string name)
+        {
+            repository.TryGetValue(name, out Config config);
+            
+            if (config == null)
+            {
+                string path = getFilename(name);
+                
+                if (File.Exists(path))
+                {
+                    string strConf = readFromFile(path);
+                    config = deserialize(strConf);
+                    repository.Add(name, config);
+                }
+                else
+                {
+                    return null;
+                }
+                
+            }
+            
+            return config;
         }
 
         public override void Set(Config listConfig)
         {
-            Repository[listConfig.Name] = listConfig;
-            
-            string strConf = serialize(listConfig as ListConfig);
-            writeToFile(Path.Combine(REPO_BASE_PATH, listConfig.Name + REPO_FILE_EXTENSION), strConf);
+            repository[listConfig.Name] = listConfig;
+
+            if (SerializeToFile)
+            {
+                string strConf = serialize(listConfig as ListConfig);
+                writeToFile(getFilename(listConfig.Name), strConf);
+            }
         }
 
         public override Config CreateNew(string name)
@@ -53,11 +64,16 @@ namespace fw_monitor
 
         private string serialize(ListConfig listConfig)
         {
-            // serializing here so set 'NewEntry' to false -->
-            listConfig.Empty = false;
             MemoryStream memoryStream = new MemoryStream();
             DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(ListConfig));
-            serializer.WriteObject(memoryStream, listConfig);
+            try
+            {
+                serializer.WriteObject(memoryStream, listConfig);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
 
             byte[] json = memoryStream.ToArray();
             memoryStream.Close();
@@ -77,7 +93,7 @@ namespace fw_monitor
         private static ListConfig readFromSTDIN(string name=null)
         {
             ListConfig listConfig = new ListConfig();
-
+            
             listConfig.Name = ConsoleHelper.ReadInput("name", name);
             listConfig.Description = ConsoleHelper.ReadInput("description");
             listConfig.URL = new Uri(ConsoleHelper.ReadInput("URL"));
@@ -111,7 +127,7 @@ namespace fw_monitor
 //                IsRevisioned = true,
 //                LineSeparator = Environment.NewLine,
 //                RevisionRegex = new Regex(@"^# Rev (\d*)$"),
-//                SubsetHeader = new Regex(@"^#\s*(\w*)\s*$"),
+//                SubsetHeader = new Regex(@"^#\s*(.*)\s*$"),
 ////                SubsetSeparator = "#",
 //            };
 //
@@ -126,7 +142,7 @@ namespace fw_monitor
 //                IsRevisioned = true,
 //                LineSeparator = Environment.NewLine,
 //                RevisionRegex = new Regex(@"^# Rev (\d*)$"),
-//                SubsetHeader =  new Regex(@"^#\s*(\w*)\s*$"),
+//                SubsetHeader =  new Regex(@"^#\s*(.*)\s*$"),
 ////                SubsetSeparator = "#",
 //            };
 //

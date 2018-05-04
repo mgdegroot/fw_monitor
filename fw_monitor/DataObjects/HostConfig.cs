@@ -5,9 +5,6 @@ namespace fw_monitor.DataObjects
     [DataContract]
     public class HostConfig : Config
     {
-        [DataMember(Order = 0)] public bool Empty { get; set; } = true;
-    
-        [DataMember(Order = 1)] public override string Name { get; set; }
         [DataMember(Order = 2)] public string HostIP { get; set; }
         [DataMember(Order = 3)] public bool ConnectUsingIP { get; set; } = true;
         [DataMember(Order = 4)] public string UserName { get; set; }
@@ -20,21 +17,26 @@ namespace fw_monitor.DataObjects
         [DataMember(Order = 11)] public string SetName { get; set; }
         [DataMember(Order = 12)] public bool SupportsFlush { get; set; }
 
-        public string GetFormattedConfig(bool incPassword)
+
+        public string GetFormattedConfig(bool incSensitive)
         {
-            string password = incPassword ? Password : "{hidden}";
-            return $@"HostName: {Name}
-HostIP: {HostIP}
-UserName: {UserName}
-Password: {password}
-UsePubkeyLogin: {UsePubkeyLogin.ToString()}
-CertPath: {CertPath}
-TableName: {TableName}
-ChainName: {ChainName}
-FlushChain: {FlushChain}
-SetName: {SetName}
-SupportsFlush: {SupportsFlush.ToString()}";
+            string password = incSensitive ? Password : "{hidden}";
+            return $@"[HostName: {Name};
+HostIP: {HostIP};
+UserName: {UserName};
+Password: {password};
+UsePubkeyLogin: {UsePubkeyLogin.ToString()};
+CertPath: {CertPath};
+TableName: {TableName};
+ChainName: {ChainName};
+FlushChain: {FlushChain};
+SetName: {SetName};
+SupportsFlush: {SupportsFlush.ToString()};]";
         }
+
+        public override string ToString() => GetFormattedConfig(false);
+        public override bool Equals(object obj) => obj?.ToString() == ToString();
+        public override int GetHashCode() => GetFormattedConfig(true).GetHashCode();
 
     }
 }

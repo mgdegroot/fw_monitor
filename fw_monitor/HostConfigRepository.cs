@@ -9,74 +9,60 @@ using fw_monitor.DataObjects;
 
 namespace fw_monitor
 {
-    public class HostConfigRepository : RepositoryBase, IRepository
+    public class HostConfigRepository : Repository, IRepository
     {
-//        private static HostConfigRepository _instance = new HostConfigRepository();
-//
-//        public static IRepository Instance => _instance;
-        
-
-        public override Dictionary<string, Config> Repository { get; set; } = new Dictionary<string, Config>();
-        
-        public override Config Get(string hostname)
+        public HostConfigRepository()
         {
-            Repository.TryGetValue(hostname, out Config nftConfig);
+            filenamePrefix = "host";
+        }
+        
+        public override Config this[string key]
+        {
+            get => Get(key); 
+            set => Set(value);
+        }
+        
+        public override Config Get(string name)
+        {
+            repository.TryGetValue(name, out Config config);
 
-            if (nftConfig == null)
+            if (config == null)
             {
-                string path = Path.Combine(REPO_BASE_PATH, hostname + REPO_FILE_EXTENSION);
+                string path = getFilename(name);
+                
                 if (File.Exists(path))
                 {
                     string strConf = readFromFile(path);
-                    nftConfig = deserialize(strConf);
-                    Repository.Add(hostname, nftConfig);
+                    config = deserialize(strConf);
+                    repository.Add(name, config);
                 }
                 else
                 {
                     return null;
-//                    return new HostConfig() {HostName = hostname, Empty = true};
                 }
-                
             }
 
-            return nftConfig;
+            return config;
         }
 
         public override void Set(Config hostConfig)
         {
-            Repository[hostConfig.Name] = hostConfig;
-            string strConf = serialize(hostConfig as HostConfig);
-            writeToFile(Path.Combine(REPO_BASE_PATH, hostConfig.Name + REPO_FILE_EXTENSION), strConf);
+            repository[hostConfig.Name] = hostConfig;
+
+            if (SerializeToFile)
+            {
+                string strConf = serialize(hostConfig as HostConfig);
+                writeToFile(getFilename(hostConfig.Name), strConf);
+            }
         }
 
         public override Config CreateNew(string name)
         {
             return readFromSTDIN(name);
         }
-
-//        public HostConfig ReadFromSTDIN()
-//        {
-//            HostConfig hostConfig = new HostConfig();
-//            hostConfig.Name = ConsoleHelper.readInput("hostname", hostConfig.Name);
-//            hostConfig.HostIP = ConsoleHelper.readInput("host ip", hostConfig.HostIP);
-//            hostConfig.UserName = ConsoleHelper.readInput("username", hostConfig.UserName);
-//            hostConfig.Password = ConsoleHelper.readInput("password", hostConfig.Password);
-//            hostConfig.CertPath = ConsoleHelper.readInput("certificate path", hostConfig.CertPath);
-//            hostConfig.TableName = ConsoleHelper.readInput("table name", hostConfig.TableName);
-//            hostConfig.ChainName = ConsoleHelper.readInput("chain name", hostConfig.ChainName);
-//            hostConfig.FlushChain = ConsoleHelper.readInputAsBool("flush chain", hostConfig.FlushChain ? "y" : "n");
-//            hostConfig.SetName = ConsoleHelper.readInput("set name", hostConfig.SetName);
-//            hostConfig.SupportsFlush = ConsoleHelper.readInputAsBool("supports flush", hostConfig.SupportsFlush ? "y" : "n");
-//            
-//            hostConfig.UsePubkeyLogin = String.IsNullOrEmpty(hostConfig.CertPath) == false;
-//
-//            return hostConfig;
-//        }
         
         private string serialize(HostConfig hostConfig)
         {
-            // serializing here so set 'NewEntry' to false -->
-            hostConfig.Empty = false;
             MemoryStream memoryStream = new MemoryStream();
             DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(HostConfig));
             serializer.WriteObject(memoryStream, hostConfig);
@@ -114,19 +100,6 @@ namespace fw_monitor
 
             return hostConfig;
         }
-
-//        private string readFromFile(string path)
-//        {
-//            string content = File.ReadAllText(path, Encoding.UTF8);
-//            return content;
-//        }
-//
-//        private void writeToFile(string path, string content)
-//        {
-//            File.WriteAllText(path, content, Encoding.UTF8);
-//        }
-
-        
     }
 
 }

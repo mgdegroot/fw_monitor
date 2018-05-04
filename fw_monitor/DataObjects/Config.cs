@@ -1,9 +1,20 @@
-﻿namespace fw_monitor.DataObjects
+﻿using System;
+using System.Runtime.Serialization;
+
+namespace fw_monitor.DataObjects
 {
+    [DataContract]
     public abstract class Config : IConfig
     {
-        public abstract string Name { get; set; }
+        [DataMember(Order=0)]
+        public virtual string Name { get; set; }
+        [DataMember(Order=1)]
         public virtual string Description { get; set; } = string.Empty;
+
+        public abstract override string ToString();
+        public override bool Equals(Object obj) => obj?.ToString() == ToString();
+        public abstract override int GetHashCode();
+        
 
     }
 }
