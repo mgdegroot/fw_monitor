@@ -57,7 +57,7 @@ namespace fw_monitor
             }
         }
 
-        public override Config CreateNew(string name)
+        public override Config Create(string name)
         {
             return readFromSTDIN(name);
         }

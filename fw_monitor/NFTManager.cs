@@ -38,12 +38,14 @@ namespace fw_monitor
             
             SshConnector connector = new SshConnector(hostConfig);
 
-            if (hostConfig.FlushChain)
-            {
-                connector.FlushChain(hostConfig.ChainName);
-            }
             connector.ErrorAdded += nftSsh_ErrorAdded;
             connector.OutputAdded += nftSsh_OutputAdded;
+            
+            if (hostConfig.FlushChain)
+            {
+                connector.FlushChain(hostConfig.Chain);
+            }
+
             
             
             foreach (string name in lists.Keys.Where(i => i != "COMBINED"))
@@ -87,7 +89,7 @@ namespace fw_monitor
                 {
                     if (ConsoleHelper.ReadInputAsBool("Create new (y/n)", "n"))
                     {
-                        foundList = (ListConfig) listConfigRepo.CreateNew(listName);
+                        foundList = (ListConfig) listConfigRepo.Create(listName);
                     }
                     else
                     {
@@ -137,7 +139,7 @@ namespace fw_monitor
                 {
                     if (ConsoleHelper.ReadInputAsBool("Create new (y/n)", "n"))
                     {
-                        foundHost = (HostConfig) hostConfigRepo.CreateNew(hostName);
+                        foundHost = (HostConfig) hostConfigRepo.Create(hostName);
                     }
                     else
                     {

@@ -17,14 +17,14 @@ namespace fw_monitor.test
                 Description = (name ?? "test") + "description",
                 HostIP="127.0.0.1",
                 ConnectUsingIP = true,
-                UserName = "username",
+                Username = "username",
                 Password = "password",
                 UsePubkeyLogin = false,
                 CertPath = "certpath",
-                TableName = "tablename",
-                ChainName = "chainname",
+                Table = "table",
+                Chain = "chain",
                 FlushChain = true,
-                SetName = "setname",
+                Set = "set",
                 SupportsFlush = true,
             };
 
@@ -36,14 +36,14 @@ namespace fw_monitor.test
         {
             string expected = @"[HostName: test;
 HostIP: 127.0.0.1;
-UserName: username;
+Username: username;
 Password: {hidden};
 UsePubkeyLogin: False;
 CertPath: certpath;
-TableName: tablename;
-ChainName: chainname;
+Table: table;
+Chain: chain;
 FlushChain: True;
-SetName: setname;
+Set: set;
 SupportsFlush: True;]";
 
             string actual = createDummyHostConfig("test").ToString();
@@ -57,14 +57,14 @@ SupportsFlush: True;]";
         {
             string expected = @"[HostName: test;
 HostIP: 127.0.0.1;
-UserName: username;
+Username: username;
 Password: {hidden};
 UsePubkeyLogin: False;
 CertPath: certpath;
-TableName: tablename;
-ChainName: chainname;
+Table: table;
+Chain: chain;
 FlushChain: True;
-SetName: setname;
+Set: set;
 SupportsFlush: True;]";
 
             string actual = createDummyHostConfig("test").GetFormattedConfig(false);
@@ -81,10 +81,10 @@ UserName: username;
 Password: password;
 UsePubkeyLogin: False;
 CertPath: certpath;
-TableName: tablename;
-ChainName: chainname;
+Table: table;
+Chain: chain;
 FlushChain: True;
-SetName: setname;
+Set: set;
 SupportsFlush: True;]";
 
             string actual = createDummyHostConfig("test").GetFormattedConfig(true);

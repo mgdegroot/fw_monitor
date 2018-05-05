@@ -56,7 +56,7 @@ namespace fw_monitor
             }
         }
 
-        public override Config CreateNew(string name)
+        public override Config Create(string name)
         {
             return readFromSTDIN(name);
         }
@@ -87,13 +87,13 @@ namespace fw_monitor
             HostConfig hostConfig = new HostConfig();
             hostConfig.Name = ConsoleHelper.ReadInput("hostname", hostConfig.Name);
             hostConfig.HostIP = ConsoleHelper.ReadInput("host ip", hostConfig.HostIP);
-            hostConfig.UserName = ConsoleHelper.ReadInput("username", hostConfig.UserName);
+            hostConfig.Username = ConsoleHelper.ReadInput("username", hostConfig.Username);
             hostConfig.Password = ConsoleHelper.ReadInput("password", hostConfig.Password);
             hostConfig.CertPath = ConsoleHelper.ReadInput("certificate path", hostConfig.CertPath);
-            hostConfig.TableName = ConsoleHelper.ReadInput("table name", hostConfig.TableName);
-            hostConfig.ChainName = ConsoleHelper.ReadInput("chain name", hostConfig.ChainName);
+            hostConfig.Table = ConsoleHelper.ReadInput("table name", hostConfig.Table);
+            hostConfig.Chain = ConsoleHelper.ReadInput("chain name", hostConfig.Chain);
             hostConfig.FlushChain = ConsoleHelper.ReadInputAsBool("flush chain", hostConfig.FlushChain ? "y" : "n");
-            hostConfig.SetName = ConsoleHelper.ReadInput("set name", hostConfig.SetName);
+            hostConfig.Set = ConsoleHelper.ReadInput("set name", hostConfig.Set);
             hostConfig.SupportsFlush = ConsoleHelper.ReadInputAsBool("supports flush", hostConfig.SupportsFlush ? "y" : "n");
             
             hostConfig.UsePubkeyLogin = String.IsNullOrEmpty(hostConfig.CertPath) == false;

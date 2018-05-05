@@ -12,9 +12,12 @@ namespace fw_monitor
         protected string REPO_FILE_EXTENSION = ".json";
         protected string filenamePrefix = string.Empty;
         protected readonly Dictionary<string, Config> repository = new Dictionary<string, Config>();
-
+        
+        private static Dictionary<Type, Repository> _instances = new Dictionary<Type, Repository>();
+        
         public static IRepository GetInstance(Type theType)
         {
+            // TODO: implement singleton creation based on theType. Possibly directly using theType???
             switch (theType.Name)
             {
                 case nameof(ListConfigRepository):
@@ -25,6 +28,17 @@ namespace fw_monitor
                     return null;
             }
         }
+        
+        public abstract Config this[string index]
+        {
+            get;
+            set;
+        }
+
+        public abstract Config Get(string name);
+        public abstract void Set(Config item);
+        public abstract Config Create(string name);
+        
         // TODO: config file option -->
         public bool SerializeToFile { get; set; } = true;
         // TODO: remove hardcoded string -->
@@ -50,20 +64,5 @@ namespace fw_monitor
             
             File.WriteAllText(path, content, Encoding.UTF8);
         }
-
-
-//        public abstract IRepository Instance { get; }
-        
-
-        public abstract Config this[string index]
-        {
-            get;
-            set;
-        }
-
-        public abstract Config Get(string name);
-        public abstract void Set(Config item);
-
-        public abstract Config CreateNew(string name);
     }
 }

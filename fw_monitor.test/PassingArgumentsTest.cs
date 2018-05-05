@@ -9,7 +9,7 @@ namespace fw_monitor.test
         public void SimpleTest()
         {
             string[] args = {""};
-            var result = Parser.Default.ParseArguments(args);
+//            var result = Parser.Default.ParseArguments(args);
 
         }
         
