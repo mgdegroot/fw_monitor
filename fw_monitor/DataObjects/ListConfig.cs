@@ -29,25 +29,41 @@ namespace fw_monitor.DataObjects
         public Regex RevisionRegex
         {
             get => _revisionRegex ?? (_revisionRegex = new Regex(_revisionRegexStr));
-            set => _revisionRegex = value;
+            set
+            {
+                _revisionRegexStr = value.ToString();
+                _revisionRegex = value;
+            }
         }
 
         public Regex SubsetHeader
         {
             get => _subsetHeader ?? (_subsetHeader = new Regex(_subsetHeaderRegexStr));
-            set => _subsetHeader = value;
+            set
+            {
+                _subsetHeaderRegexStr = value.ToString();
+                _subsetHeader = value;
+            }
         }
 
         public Regex InvalidListnameChars
         {
             get => _invalidListnameChars ?? (_invalidListnameChars = new Regex(_invalidListnameCharsRegexStr));
-            set => _invalidListnameChars = value;
+            set
+            {
+                _invalidListnameCharsRegexStr = value.ToString();
+                _invalidListnameChars = value;
+            }
         }
 
         public Regex EmptyLineIndicators
         {
             get => _emptyLineIndicators ?? (_emptyLineIndicators = new Regex(_emptyLineIndicatorRegexStr));
-            set => _emptyLineIndicators = value;
+            set
+            {
+                _emptyLineIndicatorRegexStr = value.ToString();
+                _emptyLineIndicators = value;
+            }
         }
 
         [DataMember(Order = 9)] public string InvalidCharReplacement { get; set; } = "_";
@@ -55,17 +71,18 @@ namespace fw_monitor.DataObjects
 
         public string GetFormattedConfig(bool incSensitive = false)
         {
+//            return $@"[Name: {Name};
+//Description: {Description};";
             return $@"[Name: {Name};
 Description: {Description};
 URL: {URL};
-IsComposite: {IsComposite};
+IsComposite: {IsComposite.ToString()};
 SubsetHeader: {_subsetHeaderRegexStr};
-IsRevisioned: {IsRevisioned};
+IsRevisioned: {IsRevisioned.ToString()};
 RevisionMatch: {_revisionRegexStr};
 InvalidChars: {_invalidListnameCharsRegexStr};
 EmptyLineIndicators: {_emptyLineIndicatorRegexStr};
-LineSeparator: {LineSeparator};
-]";
+LineSeparator: {LineSeparator};]";
         }
 
         public override string ToString() => GetFormattedConfig(false);

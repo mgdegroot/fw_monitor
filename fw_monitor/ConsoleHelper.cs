@@ -20,17 +20,18 @@ namespace fw_monitor
 
         public static ActionKey ParseActionKey(string input)
         {
-            if (string.IsNullOrEmpty(input))
-            {
-                return ActionKey.CANCEL;
-            }
+//            if (string.IsNullOrEmpty(input))
+//            {
+//                return ActionKey.CANCEL;
+//            }
             switch (input)
             {
-                case "y":
+                case string s when s == "y":
                     return ActionKey.YES;
-                case "n":
+                    
+                case string s when s == "n":
                     return ActionKey.NO;
-                case "e":
+                case string s when s == "e":
                     return ActionKey.EXIT;
                 default:
                     return ActionKey.CANCEL;

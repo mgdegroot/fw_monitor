@@ -6,27 +6,8 @@ using Xunit.Sdk;
 
 namespace fw_monitor.test
 {
-    public class ConfigTest
+    public class HostConfigTest
     {
-        private ListConfig createDummyListConfig(string name = null)
-        {
-            ListConfig listConfig = new ListConfig()
-            {
-                Name=name ?? "test",
-                Description = (name ?? "test") + "description",
-                URL = new Uri("http://localhost"),
-                IsComposite = true,
-                IsRevisioned = true,
-                RevisionRegex = new Regex(".*"),
-                SubsetHeader = new Regex(".*"),
-                EmptyLineIndicators = new Regex(".*"),
-                InvalidListnameChars = new Regex("#"),
-                InvalidCharReplacement = "#",
-                LineSeparator = Environment.NewLine,
-            };
-
-            return listConfig;
-        }
 
         private HostConfig createDummyHostConfig(string name = null)
         {
@@ -51,7 +32,7 @@ namespace fw_monitor.test
         }
         
         [Fact]
-        public void HostConfig_ToStringTest()
+        public void ToStringTest()
         {
             string expected = @"[HostName: test;
 HostIP: 127.0.0.1;
@@ -69,6 +50,46 @@ SupportsFlush: True;]";
 
             Assert.Equal(expected, actual);
 
+        }
+
+        [Fact]
+        public void GetFormattedConfig_hideSensitiveTest()
+        {
+            string expected = @"[HostName: test;
+HostIP: 127.0.0.1;
+UserName: username;
+Password: {hidden};
+UsePubkeyLogin: False;
+CertPath: certpath;
+TableName: tablename;
+ChainName: chainname;
+FlushChain: True;
+SetName: setname;
+SupportsFlush: True;]";
+
+            string actual = createDummyHostConfig("test").GetFormattedConfig(false);
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void GetFormattedConfig_showSensitiveTest()
+        {
+            string expected = @"[HostName: test;
+HostIP: 127.0.0.1;
+UserName: username;
+Password: password;
+UsePubkeyLogin: False;
+CertPath: certpath;
+TableName: tablename;
+ChainName: chainname;
+FlushChain: True;
+SetName: setname;
+SupportsFlush: True;]";
+
+            string actual = createDummyHostConfig("test").GetFormattedConfig(true);
+
+            Assert.Equal(expected, actual);
         }
         
     }

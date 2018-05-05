@@ -21,6 +21,7 @@ namespace fw_monitor.DataObjects
         public string GetFormattedConfig(bool incSensitive)
         {
             string password = incSensitive ? Password : "{hidden}";
+
             return $@"[HostName: {Name};
 HostIP: {HostIP};
 UserName: {UserName};
@@ -29,7 +30,7 @@ UsePubkeyLogin: {UsePubkeyLogin.ToString()};
 CertPath: {CertPath};
 TableName: {TableName};
 ChainName: {ChainName};
-FlushChain: {FlushChain};
+FlushChain: {FlushChain.ToString()};
 SetName: {SetName};
 SupportsFlush: {SupportsFlush.ToString()};]";
         }
