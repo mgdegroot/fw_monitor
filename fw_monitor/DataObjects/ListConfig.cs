@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
@@ -7,6 +8,7 @@ namespace fw_monitor.DataObjects
     [DataContract]
     public class ListConfig : Config
     {
+        
         [DataMember]
         private string _revisionRegexStr = @"^# Rev (\d*)$";
         [DataMember]
@@ -26,6 +28,11 @@ namespace fw_monitor.DataObjects
         [DataMember(Order = 3)] public bool IsComposite { get; set; } = false;
         [DataMember(Order = 4)] public bool IsRevisioned { get; set; } = false;
 
+        [DataMember(Order = 9)] public string InvalidCharReplacement { get; set; } = "_";
+        [DataMember(Order = 10)] public string LineSeparator { get; set; } = Environment.NewLine;
+
+        public IEnumerable<string> Subsets { get; set; } = new List<string>();
+        
         public Regex RevisionRegex
         {
             get => _revisionRegex ?? (_revisionRegex = new Regex(_revisionRegexStr));
@@ -65,9 +72,6 @@ namespace fw_monitor.DataObjects
                 _emptyLineIndicators = value;
             }
         }
-
-        [DataMember(Order = 9)] public string InvalidCharReplacement { get; set; } = "_";
-        [DataMember(Order = 10)] public string LineSeparator { get; set; } = Environment.NewLine;
 
         public string GetFormattedConfig(bool incSensitive = false)
         {

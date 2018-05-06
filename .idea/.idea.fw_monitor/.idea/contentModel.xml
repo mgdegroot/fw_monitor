@@ -45,6 +45,7 @@
         <e p="ListConfigRepositoryTest.cs" t="Include" />
         <e p="ListConfigTest.cs" t="Include" />
         <e p="ListFetcherTest.cs" t="Include" />
+        <e p="NFTManagerTest.cs" t="Include" />
         <e p="NFT_SshConnectorTest.cs" t="Include" />
         <e p="PassingArgumentsTest.cs" t="Include" />
         <e p="RegexTest.cs" t="Include" />

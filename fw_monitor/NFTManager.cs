@@ -9,11 +9,28 @@ using fw_monitor.DataObjects;
 
 namespace fw_monitor
 {
-    public class NFTManager
+    public interface IManager
     {
+        IExecutor Executor { get; set; }
+        Task ManageLists();
+    }
+
+    // TODO: Info for manager should be passed as interface-based object, not specific use-case parameters.
+    public class ManageInfo
+    {
+        
+    }
+    
+    public class NFTManager : IManager
+    {
+        public IExecutor Executor { get; set; }
+
+        public async Task ManageLists() => ManageLists(null, null);
+
 
         public async Task ManageLists(string listConfigName = null, string hostConfigName = null, bool interactive = true)
         {
+            bool actionResult = false;
             ListConfig listConfig = handleGetListConfig(listConfigName, interactive);
             HostConfig hostConfig = handleGetHostConfig(hostConfigName, interactive);
             
@@ -35,38 +52,23 @@ namespace fw_monitor
             
 
             Dictionary<string, List<string>> lists = await fetchList(listConfig);
-            
-            SshConnector connector = new SshConnector(hostConfig);
 
-            connector.ErrorAdded += nftSsh_ErrorAdded;
-            connector.OutputAdded += nftSsh_OutputAdded;
-            
-            if (hostConfig.FlushChain)
-            {
-                connector.FlushChain(hostConfig.Chain);
-            }
+            Executor.Connector.ErrorAdded += nftSsh_ErrorAdded;
+            Executor.Connector.OutputAdded += nftSsh_OutputAdded;
 
+            Executor.ErrorAdded += nftSsh_ErrorAdded;
+            Executor.OutputAdded += nftSsh_OutputAdded;
+
+            Executor.HostConfig = hostConfig;
+            Executor.ListConfig = listConfig;
+
+            actionResult = Executor.DoPreActions();
             
             
             foreach (string name in lists.Keys.Where(i => i != "COMBINED"))
             {
                 Console.WriteLine($"Processing {name}...");
-
-                connector.CreateSet(name);
-                // Create set, but don't try to add elements if empty -->
-                if (lists[name].Count > 0)
-                {
-                    // Try to add in bulk first.
-                    // If that fails (mostly due to overlapping intervals) add entries sequentially -->
-                    bool result = connector.AddElementsParallel(name, lists[name]);
-
-                    if (!result)
-                    {
-                        connector.AddElementsSequentially(name, lists[name]);
-                    }
-                }
-
-                connector.CreateRuleReferencingSet(name);
+                Executor.ProcessList(name, lists[name]);
             }
         }
 
@@ -84,22 +86,36 @@ namespace fw_monitor
             else
             {
                 ListConfig foundList = null;
+                bool newlyCreated = false;
                 Console.WriteLine("List config retrieval / creation...");
+                
+                string whileMsg = "Found list with URL {}. Correct(y/n)";
                 do
                 {
                     if (ConsoleHelper.ReadInputAsBool("Create new (y/n)", "n"))
                     {
                         foundList = (ListConfig) listConfigRepo.Create(listName);
+                        newlyCreated = true;
                     }
                     else
                     {
                         listName = ConsoleHelper.ReadInput("list name", listName);
                         foundList = (ListConfig) listConfigRepo.Get(listName);
+                        if (foundList == null)
+                        {
+                            whileMsg = $"No list found by the name of {listName}. Exit (y/n)?";
+                        }
+                        else
+                        {
+                            whileMsg = $"Found list with URL {listName}. Correct(y/n)";
+                            newlyCreated = false;
+                        }
+                        
                     }
                 }
-                while (!ConsoleHelper.ReadInputAsBool($"Found list with URL {foundList.URL}. Correct(y/n)", "y"));
+                while (!ConsoleHelper.ReadInputAsBool(string.Format(whileMsg, foundList?.URL), "n"));
 
-                if (ConsoleHelper.ReadInputAsBool("Serialize list config (y/n)", "y"))
+                if (newlyCreated && ConsoleHelper.ReadInputAsBool("Serialize list config (y/n)", "y"))
                 {
                     listConfigRepo[foundList.Name] = foundList;
                 }
@@ -158,17 +174,6 @@ namespace fw_monitor
             }
         }
         
-        private void updateRemoteConfig(HostConfig hostConfig, List<string>lines)
-        {
-            SshConnector sshConnector = new SshConnector(hostConfig);
-            sshConnector.ErrorAdded += nftSsh_ErrorAdded;
-            sshConnector.OutputAdded += nftSsh_OutputAdded;
-            
-            Console.WriteLine($"Adding elements to nft host {hostConfig.Name} at IP {hostConfig.HostIP}...");
-//            int handle = nftSshConnector.findRuleHandle("", "inet filter input", "testset");
-            bool result = sshConnector.AddElementsSequentially(null, lines);
-        }
-
         private void nftSsh_ErrorAdded(object sender, EventArgs e)
         {
             SshConnector connector = (SshConnector) sender;

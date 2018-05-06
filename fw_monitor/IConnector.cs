@@ -9,7 +9,10 @@ namespace fw_monitor
     {
         void Connect();
         bool ExecuteCommand(string command);
-        bool[] ExecuteCommands(IEnumerable<string> commands);
+        IEnumerable<bool> ExecuteCommands(IEnumerable<string> commands);
+
+        (bool, string) ExecuteQuery(string query);
+        IEnumerable<(bool, string)> ExecuteQueries(IEnumerable<string> queries);
         
         HostConfig HostConfig { get; set; }
         

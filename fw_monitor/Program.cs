@@ -14,10 +14,14 @@ namespace fw_monitor
         
         static void Main(string[] args)
         {
-            
-            NFTManager manager = new NFTManager();
+            IExecutor executor = new NFTablesExecutor(new SshConnector());
+                
+            NFTManager manager = new NFTManager()
+            {
+                Executor = executor,
+            };
             manager.ManageLists(null, null, true);
-            Console.WriteLine("done");
+            Console.WriteLine("Finished");
         }
 
         class CmddLineOptions
