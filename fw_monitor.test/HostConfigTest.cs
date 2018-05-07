@@ -77,7 +77,7 @@ SupportsFlush: True;]";
         {
             string expected = @"[HostName: test;
 HostIP: 127.0.0.1;
-UserName: username;
+Username: username;
 Password: password;
 UsePubkeyLogin: False;
 CertPath: certpath;

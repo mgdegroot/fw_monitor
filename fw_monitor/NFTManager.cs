@@ -11,6 +11,8 @@ namespace fw_monitor
 {
     public interface IManager
     {
+        ListConfig ListConfig { get; set; }
+        HostConfig HostConfig { get; set; }
         IExecutor Executor { get; set; }
         Task ManageLists();
     }
@@ -23,7 +25,10 @@ namespace fw_monitor
     
     public class NFTManager : IManager
     {
+        // TODO: not really proper to add them here just to facilitate unit tests...
         public IExecutor Executor { get; set; }
+        public ListConfig ListConfig { get; set; }
+        public HostConfig HostConfig { get; set; }
 
         public async Task ManageLists() => ManageLists(null, null);
 
