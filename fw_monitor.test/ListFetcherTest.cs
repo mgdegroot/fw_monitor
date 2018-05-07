@@ -1,11 +1,11 @@
 using System;
-using FakeItEasy;
 using Xunit;
 
 namespace fw_monitor.test
 {
     public class ListFetcherTest
     {
+        
         [Fact]
         public void FakeItEasyTest()
         {

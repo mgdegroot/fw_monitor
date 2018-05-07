@@ -8,29 +8,6 @@ namespace fw_monitor.test
 {
     public class HostConfigTest
     {
-
-        private HostConfig createDummyHostConfig(string name = null)
-        {
-            HostConfig hostConfig = new HostConfig()
-            {
-                Name=name ?? "test",
-                Description = (name ?? "test") + "description",
-                HostIP="127.0.0.1",
-                ConnectUsingIP = true,
-                Username = "username",
-                Password = "password",
-                UsePubkeyLogin = false,
-                CertPath = "certpath",
-                Table = "table",
-                Chain = "chain",
-                FlushChain = true,
-                Set = "set",
-                SupportsFlush = true,
-            };
-
-            return hostConfig;
-        }
-        
         [Fact]
         public void ToStringTest()
         {
@@ -46,7 +23,7 @@ FlushChain: True;
 Set: set;
 SupportsFlush: True;]";
 
-            string actual = createDummyHostConfig("test").ToString();
+            string actual = TestHelper.CreateDummyHostConfig("test").ToString();
 
             Assert.Equal(expected, actual);
 
@@ -67,7 +44,7 @@ FlushChain: True;
 Set: set;
 SupportsFlush: True;]";
 
-            string actual = createDummyHostConfig("test").GetFormattedConfig(false);
+            string actual = TestHelper.CreateDummyHostConfig("test").GetFormattedConfig(false);
 
             Assert.Equal(expected, actual);
         }
@@ -87,7 +64,7 @@ FlushChain: True;
 Set: set;
 SupportsFlush: True;]";
 
-            string actual = createDummyHostConfig("test").GetFormattedConfig(true);
+            string actual = TestHelper.CreateDummyHostConfig("test").GetFormattedConfig(true);
 
             Assert.Equal(expected, actual);
         }

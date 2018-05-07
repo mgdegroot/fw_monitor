@@ -7,25 +7,6 @@ namespace fw_monitor.test
 {
     public class ListConfigTest
     {
-        private ListConfig createDummyListConfig(string name = null)
-        {
-            ListConfig listConfig = new ListConfig()
-            {
-                Name=name ?? "test",
-                Description = (name ?? "test") + "description",
-                URL = new Uri("http://localhost"),
-                IsComposite = true,
-                IsRevisioned = true,
-                RevisionRegex = new Regex(".*"),
-                SubsetHeader = new Regex(".*"),
-                EmptyLineIndicators = new Regex(".*"),
-                InvalidListnameChars = new Regex("#"),
-                InvalidCharReplacement = "#",
-                LineSeparator = Environment.NewLine,
-            };
-
-            return listConfig;
-        }
 
         [Fact]
         public void ToStringTest()
@@ -41,7 +22,7 @@ namespace fw_monitor.test
 + "EmptyLineIndicators: .*;\n"
 + "LineSeparator: \n;]";
 
-            string actual = createDummyListConfig("test").ToString();
+            string actual = TestHelper.CreateDummyListConfig("test").ToString();
 
             Assert.Equal(expected, actual);
         }

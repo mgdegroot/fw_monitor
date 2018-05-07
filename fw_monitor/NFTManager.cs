@@ -9,13 +9,6 @@ using fw_monitor.DataObjects;
 
 namespace fw_monitor
 {
-    public interface IManager
-    {
-        ListConfig ListConfig { get; set; }
-        HostConfig HostConfig { get; set; }
-        IExecutor Executor { get; set; }
-        Task ManageLists();
-    }
 
     // TODO: Info for manager should be passed as interface-based object, not specific use-case parameters.
     public class ManageInfo
@@ -32,10 +25,8 @@ namespace fw_monitor
 
         public async Task ManageLists() => ManageLists(null, null);
 
-
         public async Task ManageLists(string listConfigName = null, string hostConfigName = null, bool interactive = true)
         {
-            bool actionResult = false;
             ListConfig listConfig = handleGetListConfig(listConfigName, interactive);
             HostConfig hostConfig = handleGetHostConfig(hostConfigName, interactive);
             
@@ -54,8 +45,13 @@ namespace fw_monitor
                     
                 };
             }
-            
 
+            ManageLists(listConfig, hostConfig);
+
+        }
+        
+        public async Task ManageLists(ListConfig listConfig, HostConfig hostConfig)
+        {
             Dictionary<string, List<string>> lists = await fetchList(listConfig);
 
             Executor.Connector.ErrorAdded += nftSsh_ErrorAdded;
@@ -67,7 +63,7 @@ namespace fw_monitor
             Executor.HostConfig = hostConfig;
             Executor.ListConfig = listConfig;
 
-            actionResult = Executor.DoPreActions();
+            bool actionResult = Executor.DoPreActions();
             
             
             foreach (string name in lists.Keys.Where(i => i != "COMBINED"))

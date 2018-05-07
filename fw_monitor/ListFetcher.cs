@@ -11,39 +11,41 @@ using fw_monitor.DataObjects;
 
 namespace fw_monitor
 {
-    public class ListFetcher
+    public class ListFetcher : IListFetcher
     {
         public string CombinedListName { get; set; } = "COMBINED";
 
 
-        public ListConfig Config { get; set; } = new ListConfig();
-        public Uri URL => Config.URL;
-        public void setURL(string url) => Config.URL = new Uri(url);
+        public ListConfig ListConfig { get; set; } = new ListConfig();
+        
+        public IList<string> this[string key]
+        {
+            get => Get(key); 
+            set => Set(key, value as List<string>);
+        }
 
-        public string Raw { get; set; } = string.Empty;
-        public List<string> RawLines { get; private set; } = new List<string>();
-        public List<string> Lines { get; private set; } = new List<string>();
+        public IList<string> Get(string name)
+        {
+            Lists.TryGetValue(name, out List<string> list);
+            return list;
+        }
+
+        public void Set(string name, IList<string> list)
+        {
+            Lists[name] = list as List<string>;
+        }
+
+        private string Raw { get; set; } = string.Empty;
+        private List<string> RawLines { get; set; } = new List<string>();
+        private List<string> Lines { get; set; } = new List<string>();
         
         public Dictionary<string, List<string>> Lists { get; private set; } = new Dictionary<string, List<string>>();
                 
         public string LastError { get; private set; } = string.Empty;
         
-        
-        public ListFetcher() {}
-
-        public ListFetcher(ListConfig listConfig)
+        public ListFetcher(ListConfig listListConfig)
         {
-            Config = listConfig;
-        }
-        
-        public ListFetcher(string url)
-        {
-            setURL(url);
-        }
-
-        public ListFetcher(Uri url)
-        {
-            this.Config.URL = url;
+            ListConfig = listListConfig;
         }
 
         public async Task FetchAndParse()
@@ -51,7 +53,7 @@ namespace fw_monitor
             await orchestrateActions();
         }
         
-        public void SaveRawToFile(string path)
+        private void SaveRawToFile(string path)
         {
             if (string.IsNullOrEmpty(Raw))
             {
@@ -62,7 +64,7 @@ namespace fw_monitor
             File.WriteAllText(path, Raw);
         }
         
-        public void SaveListToFile(string path)
+        private void SaveListToFile(string path)
         {
             if (Lines.Count == 0)
             {
@@ -77,7 +79,7 @@ namespace fw_monitor
         private async Task fetch()
         {
             
-            if (URL == null)
+            if (ListConfig.URL == null)
             {
                 throw new ArgumentException("URL is not set");
             }
@@ -85,7 +87,7 @@ namespace fw_monitor
             HttpClient client = new HttpClient();
             try
             {
-                Raw = await client.GetStringAsync(URL);
+                Raw = await client.GetStringAsync(ListConfig.URL);
             }
             catch (HttpRequestException hre)
             {
@@ -95,8 +97,6 @@ namespace fw_monitor
             {
                 client.Dispose();
             }
-
-//            convertRawToList();
         }
 
         private async Task orchestrateActions()
@@ -115,7 +115,7 @@ namespace fw_monitor
                 return;
             }
 
-            RawLines = Raw.Split(Config.LineSeparator).Where(i => string.IsNullOrEmpty(i) == false).ToList();
+            RawLines = Raw.Split(ListConfig.LineSeparator).Where(i => string.IsNullOrEmpty(i) == false).ToList();
         }
 
         private void cleanupList()
@@ -128,7 +128,7 @@ namespace fw_monitor
             Lines = RawLines.Where(i => i.StartsWith('#') == false).ToList();
         }
 
-        public void splitListInParts()
+        private void splitListInParts()
         {
             // Remove all comment fluff -->
             // TODO: use LINQ expression to match all in collection at once iso foreach construct -->
@@ -138,7 +138,7 @@ namespace fw_monitor
 //            {
 //                intermediate.AddRange(RawLines.Where(i => (i.Trim() == emptyLineIndicator) == false).ToList());
 //            }
-            intermediate.AddRange(RawLines.Where(i => Config.EmptyLineIndicators.IsMatch(i) == false));
+            intermediate.AddRange(RawLines.Where(i => ListConfig.EmptyLineIndicators.IsMatch(i) == false));
 
             int listRevision = 0;
             bool inBody = false;
@@ -147,7 +147,7 @@ namespace fw_monitor
             {
                 if (!inBody)
                 {
-                    Match match = Config.RevisionRegex.Match(intermediate[i]);
+                    Match match = ListConfig.RevisionRegex.Match(intermediate[i]);
 
                     if (match.Success)
                     {
@@ -157,12 +157,12 @@ namespace fw_monitor
                 }
                 else
                 {
-                    Match subsetMatch = Config.SubsetHeader.Match(intermediate[i]);
+                    Match subsetMatch = ListConfig.SubsetHeader.Match(intermediate[i]);
                     if (subsetMatch.Success)
                     {
                         listName = subsetMatch.Groups[1].Value;
 
-                        listName = Config.InvalidListnameChars.Replace(listName, Config.InvalidCharReplacement);
+                        listName = ListConfig.InvalidListnameChars.Replace(listName, ListConfig.InvalidCharReplacement);
                         Lists[listName] = new List<string>();
                     }
                     else
@@ -176,7 +176,7 @@ namespace fw_monitor
 
         }
 
-        public void DisplayLists()
+        private void DisplayLists()
         {
             foreach (string listName in Lists.Keys)
             {

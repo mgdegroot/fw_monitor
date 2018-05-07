@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ContentModelStore">
-    <e p="$USER_HOME$/.Rider2018.1/system/resharper-host/local/Transient/ReSharperHost/v12/SolutionCaches/_fw_monitor.-1188333517.00" t="ExcludeRecursive" />
+    <e p="$USER_HOME$/.Rider2018.1/system/resharper-host/local/Transient/ReSharperHost/v12/SolutionCaches/_fw_monitor.-1536156194.00" t="ExcludeRecursive" />
     <e p="$USER_HOME$/.nuget/packages/xunit.runner.visualstudio/2.3.1/build/netcoreapp1.0/xunit.runner.reporters.netcoreapp10.dll" t="Include" />
     <e p="$USER_HOME$/.nuget/packages/xunit.runner.visualstudio/2.3.1/build/netcoreapp1.0/xunit.runner.utility.netcoreapp10.dll" t="Include" />
     <e p="$USER_HOME$/.nuget/packages/xunit.runner.visualstudio/2.3.1/build/netcoreapp1.0/xunit.runner.visualstudio.dotnetcore.testadapter.dll" t="Include" />
@@ -17,9 +17,13 @@
           <e p="NFTablesHostConfig.cs" t="Include" />
         </e>
         <e p="HostConfigRepository.cs" t="Include" />
-        <e p="IConnector.cs" t="Include" />
-        <e p="IExecutor.cs" t="Include" />
-        <e p="IRepository.cs" t="Include" />
+        <e p="Interfaces" t="Include">
+          <e p="IConnector.cs" t="Include" />
+          <e p="IExecutor.cs" t="Include" />
+          <e p="IListFetcher.cs" t="Include" />
+          <e p="IManager.cs" t="Include" />
+          <e p="IRepository.cs" t="Include" />
+        </e>
         <e p="ListConfigRepository.cs" t="Include" />
         <e p="ListFetcher.cs" t="Include" />
         <e p="ListRepository.cs" t="Include" />
@@ -49,6 +53,7 @@
         <e p="NFT_SshConnectorTest.cs" t="Include" />
         <e p="PassingArgumentsTest.cs" t="Include" />
         <e p="RegexTest.cs" t="Include" />
+        <e p="TestHelper.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="fw_monitor.test.csproj" t="IncludeRecursive" />
         <e p="obj" t="ExcludeRecursive">
