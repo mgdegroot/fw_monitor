@@ -14,6 +14,7 @@ namespace fw_monitor
         
         static void Main(string[] args)
         {
+            
             // TODO: Factory or builder pattern -->
             IExecutor executor = new NFTablesExecutor(new SshConnector());
                 

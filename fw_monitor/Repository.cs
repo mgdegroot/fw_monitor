@@ -7,7 +7,7 @@ using fw_monitor.DataObjects;
 namespace fw_monitor
 {
     
-    public abstract class Repository : IRepository
+    public class Repository : IRepository
     {
         protected string REPO_FILE_EXTENSION = ".json";
         protected string filenamePrefix = string.Empty;
@@ -15,7 +15,7 @@ namespace fw_monitor
         
         private static Dictionary<Type, Repository> _instances = new Dictionary<Type, Repository>();
         
-        public static IRepository GetInstance(Type theType)
+        public IRepository GetInstance(Type theType)
         {
             // TODO: implement singleton creation based on theType. Possibly directly using theType???
             switch (theType.Name)
@@ -29,16 +29,16 @@ namespace fw_monitor
             }
         }
         
-        public abstract Config this[string index]
+        public virtual Config this[string index]
         {
-            get;
-            set;
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException(); 
         }
 
-        public abstract Config Get(string name);
-        public abstract void Set(Config item);
-        public abstract Config Create(string name);
-        
+        public virtual Config Get(string name) => throw new NotImplementedException();
+        public virtual void Set(Config item) =>throw new NotImplementedException();
+        public virtual Config Create(string name) => throw new NotImplementedException();
+
         // TODO: config file option -->
         public bool SerializeToFile { get; set; } = true;
         // TODO: remove hardcoded string -->

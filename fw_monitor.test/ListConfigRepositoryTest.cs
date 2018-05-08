@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using fw_monitor.DataObjects;
 using Xunit;
+using NSubstitute;
 
 
 namespace fw_monitor.test
@@ -23,7 +24,7 @@ namespace fw_monitor.test
                 IsRevisioned = true,
                 URL = new Uri("http://localhost"),
             };
-
+            
             return listConfig;
         }
         

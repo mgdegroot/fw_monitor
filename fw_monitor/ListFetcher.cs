@@ -15,8 +15,11 @@ namespace fw_monitor
     {
         public string CombinedListName { get; set; } = "COMBINED";
 
-
         public ListConfig ListConfig { get; set; } = new ListConfig();
+
+        public Dictionary<string, List<string>> Lists { get; set; } = new Dictionary<string, List<string>>();
+                
+        public string LastError { get; private set; } = string.Empty;
         
         public IList<string> this[string key]
         {
@@ -30,18 +33,16 @@ namespace fw_monitor
             return list;
         }
 
-        public void Set(string name, IList<string> list)
+        public void Set(string name, List<string> list)
         {
-            Lists[name] = list as List<string>;
+            Lists[name] = list;
         }
 
         private string Raw { get; set; } = string.Empty;
         private List<string> RawLines { get; set; } = new List<string>();
         private List<string> Lines { get; set; } = new List<string>();
         
-        public Dictionary<string, List<string>> Lists { get; private set; } = new Dictionary<string, List<string>>();
-                
-        public string LastError { get; private set; } = string.Empty;
+
         
         public ListFetcher(ListConfig listListConfig)
         {
@@ -60,7 +61,7 @@ namespace fw_monitor
                 LastError = "Content (Raw) is empty. Not writing empty file...";
                 return;
             }
-
+            
             File.WriteAllText(path, Raw);
         }
         
@@ -70,12 +71,10 @@ namespace fw_monitor
             {
                 LastError = "List is empty. Not writing empty file";
             }
-
+            
             File.WriteAllLines(path, Lines);
         }
         
-        
-
         private async Task fetch()
         {
             

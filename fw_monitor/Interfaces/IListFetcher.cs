@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using fw_monitor.DataObjects;
 
 namespace fw_monitor
@@ -9,6 +10,10 @@ namespace fw_monitor
         
         IList<string> this[string index] { get; set; }
         IList<string> Get(string name);
-        void Set(string name, IList<string> item);
+        
+        Dictionary<string, List<string>> Lists { get; set; }
+        void Set(string name, List<string> item);
+        Task FetchAndParse();
+
     }
 }

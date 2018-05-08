@@ -18,29 +18,30 @@ namespace fw_monitor
     
     public class NFTManager : IManager
     {
+        public IRepository Repository { get; set; } = new Repository();
         // TODO: not really proper to add them here just to facilitate unit tests...
         public IExecutor Executor { get; set; }
         public ListConfig ListConfig { get; set; }
         public HostConfig HostConfig { get; set; }
+        public IListFetcher ListFetcher { get; set; }
 
         public async Task ManageLists() => ManageLists(null, null);
 
         public async Task ManageLists(string listConfigName = null, string hostConfigName = null, bool interactive = true)
         {
             ListConfig listConfig = handleGetListConfig(listConfigName, interactive);
-            HostConfig hostConfig = handleGetHostConfig(hostConfigName, interactive);
-            
             if (listConfig == null)
             {
-                throw new NoNullAllowedException("Got a nullzie herezies...")
+                throw new NoNullAllowedException("Got null for a ListConfig...")
                 {
                     
                 };
             }
-
+            
+            HostConfig hostConfig = handleGetHostConfig(hostConfigName, interactive);
             if (hostConfig == null)
             {
-                throw new NoNullAllowedException("Got a nullzie herezies...")
+                throw new NoNullAllowedException("Got null for a HostConfig...")
                 {
                     
                 };
@@ -80,7 +81,8 @@ namespace fw_monitor
             {
                 if (string.IsNullOrEmpty(listName))
                 {
-                    throw new ArgumentNullException("listName needs to be set in non-interactive mode.");
+                    return null;
+                    //throw new ArgumentNullException("listName needs to be set in non-interactive mode.");
                 }
                 return (ListConfig)listConfigRepo.Get(listName);
             }
@@ -144,7 +146,8 @@ namespace fw_monitor
             {
                 if (string.IsNullOrEmpty(hostName))
                 {
-                    throw new ArgumentNullException("hostName needs to be set in non-interactive mode.");
+                    return null;
+                    //throw new ArgumentNullException("hostName needs to be set in non-interactive mode.");
                 }
                 return (HostConfig) hostConfigRepo.Get(hostName);
             }
@@ -189,13 +192,17 @@ namespace fw_monitor
         
         private async Task<Dictionary<string, List<string>>> fetchList(ListConfig listConfig)
         {
+            if (ListFetcher == null)
+            {
+                throw new NoNullAllowedException("ListFetcher needs to be added");
+            }
 //            string saveFile = Environment.GetEnvironmentVariable("HOME") + "/test/emerging_threats.txt";
             
             Console.WriteLine($"Trying to fetch list from {listConfig.Name} ({listConfig.URL})...");
-            ListFetcher fetcher = new ListFetcher(listConfig);
+//            ListFetcher = new ListFetcher(listConfig);
 
             Console.WriteLine("Fetching list.");
-            Task fetchTask = Task.Run(fetcher.FetchAndParse);
+            Task fetchTask = Task.Run(ListFetcher.FetchAndParse);
 
             while (!fetchTask.IsCompleted)
             {
@@ -205,7 +212,7 @@ namespace fw_monitor
 
             Console.WriteLine("Done fetching list.");
 
-            return fetcher.Lists;
+            return ListFetcher.Lists;
         }
     }
 }
