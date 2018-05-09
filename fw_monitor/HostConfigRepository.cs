@@ -13,7 +13,7 @@ namespace fw_monitor
     {
         public HostConfigRepository()
         {
-            filenamePrefix = "host";
+            filenamePrefix = "hostconfig";
         }
         
         public override Config this[string key]

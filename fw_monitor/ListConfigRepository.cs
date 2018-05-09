@@ -11,9 +11,10 @@ namespace fw_monitor
 {
     public class ListConfigRepository : Repository, IRepository
     {
+
         public ListConfigRepository()
         {
-            filenamePrefix = "list";
+            filenamePrefix = "listconfig";
         }
         
         public override Config this[string key]
@@ -40,28 +41,27 @@ namespace fw_monitor
                 {
                     return null;
                 }
-                
             }
             
             return config;
         }
-
+        
         public override void Set(Config listConfig)
         {
             repository[listConfig.Name] = listConfig;
-
+            
             if (SerializeToFile)
             {
                 string strConf = serialize(listConfig as ListConfig);
                 writeToFile(getFilename(listConfig.Name), strConf);
             }
         }
-
+        
         public override Config Create(string name)
         {
             return readFromSTDIN(name);
         }
-
+        
         private string serialize(ListConfig listConfig)
         {
             MemoryStream memoryStream = new MemoryStream();
@@ -72,13 +72,12 @@ namespace fw_monitor
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                return null;
             }
-
+            
             byte[] json = memoryStream.ToArray();
             memoryStream.Close();
             return Encoding.UTF8.GetString(json, 0, json.Length);
-            throw new NotImplementedException("Nog niet");
         }
 
         private ListConfig deserialize(string json)

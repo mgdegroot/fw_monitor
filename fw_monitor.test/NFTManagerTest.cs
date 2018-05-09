@@ -202,16 +202,11 @@ namespace fw_monitor.test
                 Executor = substExecutor,
                 ListFetcher = substListFetcher,
             };
-
+            
             nftManager.ManageLists(listConfigDummy, hostConfigDummy);
             
             // TODO: asserts that required calls have been made.
             Assert.True(true);
-
-
-
         }
-        
-        
     }
 }

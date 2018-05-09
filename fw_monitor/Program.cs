@@ -34,7 +34,7 @@ namespace fw_monitor
             [Value(1)]
             public string Hostname { get; set; }
         }
-
+        
         private static void parseArgs(string[] args)
         {
             
@@ -52,8 +52,6 @@ namespace fw_monitor
                         Console.WriteLine(error.ToString());
                     }
                 });
-
-//            Console.WriteLine(result.);
 
         }
     }

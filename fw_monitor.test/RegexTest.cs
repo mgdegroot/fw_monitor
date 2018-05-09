@@ -1,4 +1,9 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Json;
+using System.Text;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace fw_monitor.test
@@ -25,6 +30,31 @@ namespace fw_monitor.test
 
             Assert.Equal(expected, actual);
 
+        }
+
+        [Fact]
+        public void ListSerializationTest()
+        {
+            List<string> test = new List<string>(new string[] {"1","2","3"});
+            
+            MemoryStream memoryStream = new MemoryStream();
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(List<string>));
+
+            try
+            {
+                serializer.WriteObject(memoryStream, test);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"nope: {ex.Message}");
+            }
+
+            byte[] json = memoryStream.ToArray();
+            memoryStream.Close();
+
+            string res = Encoding.UTF8.GetString(json);
+
+            Assert.NotEmpty(res);
         }
     }
 }

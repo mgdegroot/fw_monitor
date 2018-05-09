@@ -42,6 +42,7 @@ namespace fw_monitor
         private List<string> RawLines { get; set; } = new List<string>();
         private List<string> Lines { get; set; } = new List<string>();
         
+        public ListFetcher() {}
 
         
         public ListFetcher(ListConfig listListConfig)
@@ -130,13 +131,8 @@ namespace fw_monitor
         private void splitListInParts()
         {
             // Remove all comment fluff -->
-            // TODO: use LINQ expression to match all in collection at once iso foreach construct -->
             List<string> intermediate = new List<string>();
-            
-//            foreach (string emptyLineIndicator in Config.EmptyLineIndicators)
-//            {
-//                intermediate.AddRange(RawLines.Where(i => (i.Trim() == emptyLineIndicator) == false).ToList());
-//            }
+
             intermediate.AddRange(RawLines.Where(i => ListConfig.EmptyLineIndicators.IsMatch(i) == false));
 
             int listRevision = 0;

@@ -10,15 +10,17 @@
         <e p="ConsoleHelper.cs" t="Include" />
         <e p="DataObjects" t="Include">
           <e p="Config.cs" t="Include" />
+          <e p="ContentList.cs" t="Include" />
           <e p="HostConfig.cs" t="Include" />
-          <e p="IConfig.cs" t="Include" />
           <e p="IPTablesHostConfig.cs" t="Include" />
           <e p="ListConfig.cs" t="Include" />
           <e p="NFTablesHostConfig.cs" t="Include" />
         </e>
         <e p="HostConfigRepository.cs" t="Include" />
         <e p="Interfaces" t="Include">
+          <e p="IConfig.cs" t="Include" />
           <e p="IConnector.cs" t="Include" />
+          <e p="IContentList.cs" t="Include" />
           <e p="IExecutor.cs" t="Include" />
           <e p="IListFetcher.cs" t="Include" />
           <e p="IManager.cs" t="Include" />
@@ -58,6 +60,7 @@
       </e>
       <e p="fw_monitor.test" t="IncludeRecursive">
         <e p="ConsoleHelperTest.cs" t="Include" />
+        <e p="ContentListTest.cs" t="Include" />
         <e p="HostConfigTest.cs" t="Include" />
         <e p="ListConfigRepositoryTest.cs" t="Include" />
         <e p="ListConfigTest.cs" t="Include" />
