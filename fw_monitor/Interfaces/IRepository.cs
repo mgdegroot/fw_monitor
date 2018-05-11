@@ -6,14 +6,15 @@ namespace fw_monitor
 {
     public interface IRepository
     {
-        Config this[string index] { get; set; }
+        IRepositoryItem this[string index] { get; set; }
 
         bool SerializeToFile { get; set; }
         string SerializePath { get; set; }
+        ICreator Creator { get; set; }
 
-        Config Get(string name);
-        void Set(Config item);
-        Config Create(string name);
+        IRepositoryItem Get(string name);
+        void Set(IRepositoryItem item);
+//        IRepositoryItem Create(string name);
         
         IRepository GetInstance(Type theType);
     }

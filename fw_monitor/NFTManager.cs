@@ -48,12 +48,18 @@ namespace fw_monitor
             }
 
             ManageLists(listConfig, hostConfig);
-
+            
         }
         
         public async Task ManageLists(ListConfig listConfig, HostConfig hostConfig)
         {
             Dictionary<string, List<string>> lists = await fetchList(listConfig);
+            
+            //
+
+            handleSaveFetchedLists(listConfig, lists);
+            
+            //
 
             Executor.Connector.ErrorAdded += nftSsh_ErrorAdded;
             Executor.Connector.OutputAdded += nftSsh_OutputAdded;
@@ -67,10 +73,30 @@ namespace fw_monitor
             bool actionResult = Executor.DoPreActions();
             
             
-            foreach (string name in lists.Keys.Where(i => i != "COMBINED"))
+            foreach (string name in lists.Keys.Where(i => i != Util.MAINLISTNAME))
             {
                 Console.WriteLine($"Processing {name}...");
                 Executor.ProcessList(name, lists[name]);
+            }
+        }
+
+        private void handleSaveFetchedLists(ListConfig listConfig, Dictionary<string, List<string>> lists)
+        {
+            foreach (KeyValuePair<string,List<string>> kvp in lists)
+            {
+                ListRepository listRepository = (ListRepository) Repository.GetInstance(typeof(ListRepository));
+                
+                List<string> elements = kvp.Value;
+                ContentList cl = new ContentList()
+                {
+                    Name=kvp.Key,
+                    Version = listConfig.Version,
+                    IsSubList = (kvp.Key != Util.MAINLISTNAME),
+                    Elements = kvp.Value,
+                };
+                
+                
+                listRepository.Set(kvp.Value as IRepositoryItem);
             }
         }
 
@@ -82,7 +108,6 @@ namespace fw_monitor
                 if (string.IsNullOrEmpty(listName))
                 {
                     return null;
-                    //throw new ArgumentNullException("listName needs to be set in non-interactive mode.");
                 }
                 return (ListConfig)listConfigRepo.Get(listName);
             }
@@ -97,7 +122,7 @@ namespace fw_monitor
                 {
                     if (ConsoleHelper.ReadInputAsBool("Create new (y/n)", "n"))
                     {
-                        foundList = (ListConfig) listConfigRepo.Create(listName);
+                        foundList = (ListConfig) listConfigRepo.Creator.Create(listName);
                         newlyCreated = true;
                     }
                     else
@@ -159,7 +184,7 @@ namespace fw_monitor
                 {
                     if (ConsoleHelper.ReadInputAsBool("Create new (y/n)", "n"))
                     {
-                        foundHost = (HostConfig) hostConfigRepo.Create(hostName);
+                        foundHost = (HostConfig) hostConfigRepo.Creator.Create(hostName);
                     }
                     else
                     {

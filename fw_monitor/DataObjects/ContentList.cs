@@ -2,20 +2,38 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection.Metadata.Ecma335;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
 
 namespace fw_monitor.DataObjects
 {
-    public class ContentList : Repository, IContentList, IEnumerable<string>
+    [DataContract]
+    public class ContentList : IContentList, IEnumerable<string>
     {
+        private string filenamePrefix = string.Empty;
+        
+        [DataMember]
         private List<string> _content = new List<string>();
 
-        public ContentList() => filenamePrefix = "list";
+        public ContentList()
+        {
+            filenamePrefix = "list";
+        }
+
+        public IList<string> Elements
+        {
+            get => _content;
+            set => _content = value as List<string>;
+        }
+        
+        [DataMember]
         public string Name { get; set; }
-        public int Version { get; set; }
+        [DataMember]
+        public string Version { get; set; }
+        [DataMember]
         public bool IsSubList { get; set; } = false;
-        public bool SerializeToFile { get; set; } = true;
         
         public string this[int index]
         {
@@ -25,24 +43,27 @@ namespace fw_monitor.DataObjects
         
         public string Get(int index)
         {
-            
-            return _content[index];
+            return Elements[index];
         }
 
         public void Add(string value)
         {
-            _content.Add(value);
+            // Trim but don't add if empty -->
+            value = value.Trim();
+            if (string.IsNullOrEmpty(value)) return;
+            
+            Elements.Add(value);
         }
         public void Set(int index, string value)
         {
-            _content[index] = value;
-            
-            if (SerializeToFile)
-            {
-                string strList = serialize();
-                writeToFile(getFilename(Name), strList);
-            }
+            Elements[index] = value;
         }
+
+//        public void SaveToFile()
+//        {
+//            string strList = Serialize();
+//            util.WriteToFile(getFilename(Name), strList, false);
+//        }
 
 
         public string GetFormattedConfig(bool incSensitive = false)
@@ -51,25 +72,28 @@ namespace fw_monitor.DataObjects
 Name: {Name};
 Version: {Version};
 IsSubList: {IsSubList};
-NrElements: {_content.Count};]
-ContentHash: {_content.GetHashCode()}";
+NrElements: {Elements.Count};]
+ContentHash: {Elements.GetHashCode()}";
         }
 
         public override string ToString() => GetFormattedConfig(false);
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable) _content).GetEnumerator();
+            return ((IEnumerable) Elements).GetEnumerator();
         }
 
         public IEnumerator<string> GetEnumerator()
         {
-            return _content.GetEnumerator();
+            return Elements.GetEnumerator();
         }
 
         public override bool Equals(object obj) => obj.ToString() == ToString();
         public override int GetHashCode() => GetFormattedConfig().GetHashCode();
+        
+        protected string getFilename(string name) =>
+            Path.Combine(Util.SerializePath, $"{filenamePrefix}_{name}{Util.Extension.JSON}");
 
-        private string serialize()
+        public string Serialize()
         {
             
             MemoryStream memoryStream = new MemoryStream();
@@ -89,14 +113,13 @@ ContentHash: {_content.GetHashCode()}";
             return Encoding.UTF8.GetString(json, 0, json.Length);
         }
 
-        private ContentList deserialize(string json)
+        public IContentList Deserialize(string json)
         {
             MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(json));
             DataContractJsonSerializer serializer = new DataContractJsonSerializer(GetType());
             ContentList contentList = (ContentList) serializer.ReadObject(memoryStream);
 
             return contentList;
-
         }
 
     }

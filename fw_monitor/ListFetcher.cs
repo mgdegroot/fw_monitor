@@ -13,7 +13,7 @@ namespace fw_monitor
 {
     public class ListFetcher : IListFetcher
     {
-        public string CombinedListName { get; set; } = "COMBINED";
+        public string CombinedListName { get; set; } = Util.MAINLISTNAME;
 
         public ListConfig ListConfig { get; set; } = new ListConfig();
 
@@ -147,6 +147,7 @@ namespace fw_monitor
                     if (match.Success)
                     {
                         int.TryParse(match.Groups[1].Value, out listRevision);
+                        ListConfig.Version = listRevision.ToString();
                         inBody = true;
                     }
                 }

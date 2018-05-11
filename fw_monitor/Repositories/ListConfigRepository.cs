@@ -11,19 +11,21 @@ namespace fw_monitor
 {
     public class ListConfigRepository : Repository, IRepository
     {
+        
+        public override ICreator Creator { get; set; } = new ListConfigFromStdInCreator();
 
         public ListConfigRepository()
         {
             filenamePrefix = "listconfig";
         }
         
-        public override Config this[string key]
+        public override IRepositoryItem this[string key]
         {
             get => Get(key);
             set => Set(value);
         }
         
-        public override Config Get(string name)
+        public override IRepositoryItem Get(string name)
         {
             repository.TryGetValue(name, out Config config);
             
@@ -46,21 +48,26 @@ namespace fw_monitor
             return config;
         }
         
-        public override void Set(Config listConfig)
+        public override void Set(IRepositoryItem item)
         {
-            repository[listConfig.Name] = listConfig;
-            
-            if (SerializeToFile)
+            if (item is ListConfig listConfig)
             {
-                string strConf = serialize(listConfig as ListConfig);
-                writeToFile(getFilename(listConfig.Name), strConf);
+                repository[listConfig.Name] = listConfig;
+            
+                if (SerializeToFile)
+                {
+                    string strConf = serialize(listConfig as ListConfig);
+                    writeToFile(getFilename(listConfig.Name), strConf);
+                }
             }
+            
+            
         }
         
-        public override Config Create(string name)
-        {
-            return readFromSTDIN(name);
-        }
+//        public override IRepositoryItem Create(string name)
+//        {
+//            return readFromSTDIN(name);
+//        }
         
         private string serialize(ListConfig listConfig)
         {
@@ -89,27 +96,6 @@ namespace fw_monitor
             return listConfig;
         }
         
-        private static ListConfig readFromSTDIN(string name=null)
-        {
-            ListConfig listConfig = new ListConfig();
-            
-            listConfig.Name = ConsoleHelper.ReadInput("name", name);
-            listConfig.Description = ConsoleHelper.ReadInput("description");
-            listConfig.URL = new Uri(ConsoleHelper.ReadInput("URL"));
-            listConfig.IsComposite = ConsoleHelper.ReadInputAsBool("contains sublists (y/n)");
-            if (listConfig.IsComposite)
-            {
-                listConfig.SubsetHeader = new Regex(ConsoleHelper.ReadInput("regex for subset name"));
-            }
-            listConfig.IsRevisioned = ConsoleHelper.ReadInputAsBool("is versioned (y/n");
-            if (listConfig.IsRevisioned)
-            {
-                listConfig.RevisionRegex = new Regex(ConsoleHelper.ReadInput("regex for version number"));
-            }
-
-            return listConfig;
-        }
-
         private void loadRepoFromRepoDir()
         {
             
@@ -149,6 +135,35 @@ namespace fw_monitor
 //
 //        }
 
+    }
+
+    public class ListConfigFromStdInCreator : ICreator
+    {
+        public IRepositoryItem Create(string name)
+        {
+            return readFromSTDIN(name);
+        }
+        
+        private ListConfig readFromSTDIN(string name=null)
+        {
+            ListConfig listConfig = new ListConfig();
+            
+            listConfig.Name = ConsoleHelper.ReadInput("name", name);
+            listConfig.Description = ConsoleHelper.ReadInput("description");
+            listConfig.URL = new Uri(ConsoleHelper.ReadInput("URL"));
+            listConfig.IsComposite = ConsoleHelper.ReadInputAsBool("contains sublists (y/n)");
+            if (listConfig.IsComposite)
+            {
+                listConfig.SubsetHeader = new Regex(ConsoleHelper.ReadInput("regex for subset name"));
+            }
+            listConfig.IsRevisioned = ConsoleHelper.ReadInputAsBool("is versioned (y/n");
+            if (listConfig.IsRevisioned)
+            {
+                listConfig.RevisionRegex = new Regex(ConsoleHelper.ReadInput("regex for version number"));
+            }
+
+            return listConfig;
+        }
     }
 
     

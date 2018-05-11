@@ -11,18 +11,24 @@ namespace fw_monitor
 {
     public class HostConfigRepository : Repository, IRepository
     {
-        public HostConfigRepository()
+        public override ICreator Creator { get; set; } = new HostConfigFromStdInCreator();
+        
+        public HostConfigRepository() : base()
         {
             filenamePrefix = "hostconfig";
         }
-        
-        public override Config this[string key]
+
+        public HostConfigRepository(IUtil util) : this()
+        {
+            this._util = util;
+        }
+        public override IRepositoryItem this[string key]
         {
             get => Get(key); 
             set => Set(value);
         }
         
-        public override Config Get(string name)
+        public override IRepositoryItem Get(string name)
         {
             repository.TryGetValue(name, out Config config);
 
@@ -42,24 +48,27 @@ namespace fw_monitor
                 }
             }
 
-            return config;
+            return config as IRepositoryItem;
         }
 
-        public override void Set(Config hostConfig)
+        public override void Set(IRepositoryItem item)
         {
-            repository[hostConfig.Name] = hostConfig;
-
-            if (SerializeToFile)
+            if (item is HostConfig hostConfig)
             {
-                string strConf = serialize(hostConfig as HostConfig);
-                writeToFile(getFilename(hostConfig.Name), strConf);
+                repository[hostConfig.Name] = hostConfig;
+
+                if (SerializeToFile)
+                {
+                    string strConf = serialize(hostConfig);
+                    writeToFile(getFilename(hostConfig.Name), strConf);
+                }    
             }
         }
 
-        public override Config Create(string name)
-        {
-            return readFromSTDIN(name);
-        }
+//        public override IRepositoryItem Create(string name)
+//        {
+//            return readFromSTDIN(name);
+//        }
         
         private string serialize(HostConfig hostConfig)
         {
@@ -81,10 +90,18 @@ namespace fw_monitor
 
             return hostConfig;
         }
-        
-        private static HostConfig readFromSTDIN(string name=null)
+    }
+
+    public class HostConfigFromStdInCreator : ICreator
+    {
+        public IRepositoryItem Create(string name)
         {
-            HostConfig hostConfig = new HostConfig();
+            return readFromSTDIN(name);
+        }
+        
+        private HostConfig readFromSTDIN(string name=null)
+        {
+            HostConfig hostConfig = new HostConfig() { Name=name,};
             hostConfig.Name = ConsoleHelper.ReadInput("hostname", hostConfig.Name);
             hostConfig.HostIP = ConsoleHelper.ReadInput("host ip", hostConfig.HostIP);
             hostConfig.Username = ConsoleHelper.ReadInput("username", hostConfig.Username);

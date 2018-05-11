@@ -27,7 +27,7 @@ namespace fw_monitor.DataObjects
         [DataMember(Order = 2)] public Uri URL { get; set; }
         [DataMember(Order = 3)] public bool IsComposite { get; set; } = false;
         [DataMember(Order = 4)] public bool IsRevisioned { get; set; } = false;
-
+        [DataMember(Order = 5)] public string Version { get; set; }
         [DataMember(Order = 9)] public string InvalidCharReplacement { get; set; } = "_";
         [DataMember(Order = 10)] public string LineSeparator { get; set; } = Environment.NewLine;
 
