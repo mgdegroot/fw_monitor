@@ -76,6 +76,7 @@
         <e p="NFT_SshConnectorTest.cs" t="Include" />
         <e p="PassingArgumentsTest.cs" t="Include" />
         <e p="RegexTest.cs" t="Include" />
+        <e p="RepostitoryTest.cs" t="Include" />
         <e p="TestHelper.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="fw_monitor.test.csproj" t="IncludeRecursive" />

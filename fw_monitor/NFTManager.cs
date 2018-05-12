@@ -47,6 +47,15 @@ namespace fw_monitor
                 };
             }
 
+            if (interactive)
+            {
+                Console.WriteLine($"Got Listconfig as {listConfig}\nGot Hostconfig as {hostConfig}\n.");
+                if (!ConsoleHelper.ReadInputAsBool("Proceed with fetch (y/n)", "y"))
+                {
+                    return;
+                }
+            }
+
             ManageLists(listConfig, hostConfig);
             
         }
@@ -86,7 +95,7 @@ namespace fw_monitor
             {
                 ListRepository listRepository = (ListRepository) Repository.GetInstance(typeof(ListRepository));
                 
-                List<string> elements = kvp.Value;
+//                List<string> elements = kvp.Value;
                 ContentList cl = new ContentList()
                 {
                     Name=kvp.Key,
@@ -96,7 +105,7 @@ namespace fw_monitor
                 };
                 
                 
-                listRepository.Set(kvp.Value as IRepositoryItem);
+                listRepository.Set(cl);
             }
         }
 
@@ -117,12 +126,13 @@ namespace fw_monitor
                 bool newlyCreated = false;
                 Console.WriteLine("List config retrieval / creation...");
                 
-                string whileMsg = "Found list with URL {}. Correct(y/n)";
+                string whileMsg;
                 do
                 {
                     if (ConsoleHelper.ReadInputAsBool("Create new (y/n)", "n"))
                     {
                         foundList = (ListConfig) listConfigRepo.Creator.Create(listName);
+                        whileMsg = $"Created list with name {foundList?.Name}. Correct (y/n)";
                         newlyCreated = true;
                     }
                     else
@@ -135,35 +145,23 @@ namespace fw_monitor
                         }
                         else
                         {
-                            whileMsg = $"Found list with URL {listName}. Correct(y/n)";
+                            whileMsg = $"Found list with name {foundList.Name}. Correct(y/n)";
                             newlyCreated = false;
                         }
                         
                     }
                 }
-                while (!ConsoleHelper.ReadInputAsBool(string.Format(whileMsg, foundList?.URL), "n"));
+                while (!ConsoleHelper.ReadInputAsBool(whileMsg, "y"));
 
                 if (newlyCreated && ConsoleHelper.ReadInputAsBool("Serialize list config (y/n)", "y"))
                 {
                     listConfigRepo[foundList.Name] = foundList;
                 }
+                
                 return foundList;
             }
         }
 
-        private void handleSaveConfig(Config config)
-        {
-            switch (config)
-            {
-                case ListConfig lc:
-                    break;
-                case HostConfig hc:
-                    break;
-                default:
-                    throw new NotSupportedException($"Config {config.GetType()} not yet supported.");
-            }
-        }
-        
         private HostConfig handleGetHostConfig(string hostName=null, bool interactive=false)
         {
             HostConfigRepository hostConfigRepo = (HostConfigRepository)Repository.GetInstance(typeof(HostConfigRepository));
@@ -172,29 +170,42 @@ namespace fw_monitor
                 if (string.IsNullOrEmpty(hostName))
                 {
                     return null;
-                    //throw new ArgumentNullException("hostName needs to be set in non-interactive mode.");
                 }
                 return (HostConfig) hostConfigRepo.Get(hostName);
             }
             else
             {
                 HostConfig foundHost = null;
+                bool newlyCreated = false;
                 Console.WriteLine("Host config retrieval / creation...");
+
+                string whileMsg;
                 do
                 {
                     if (ConsoleHelper.ReadInputAsBool("Create new (y/n)", "n"))
                     {
                         foundHost = (HostConfig) hostConfigRepo.Creator.Create(hostName);
+                        whileMsg = $"Created list with name {foundHost?.Name}. Correct (y/n)";
+                        newlyCreated = true;
                     }
                     else
                     {
                         hostName = ConsoleHelper.ReadInput("host name", hostName);
                         foundHost = (HostConfig) hostConfigRepo.Get(hostName);
+                        if (foundHost == null)
+                        {
+                            whileMsg = $"No host found by the name of {hostName}. Exit (y/n)";
+                        }
+                        else
+                        {
+                            whileMsg = $"Found host with name {foundHost.Name}. Correct (y/n)";
+                            newlyCreated = false;
+                        }
                     }
                 }
-                while (!ConsoleHelper.ReadInputAsBool($"Found host {hostName} with IP {foundHost.HostIP} and config {foundHost.GetFormattedConfig(false)}. Correct(y/n)", "y"));
+                while (!ConsoleHelper.ReadInputAsBool(whileMsg, "y"));
 
-                if (ConsoleHelper.ReadInputAsBool("Serialize host config (y/n)", "y"))
+                if (newlyCreated && ConsoleHelper.ReadInputAsBool("Serialize host config (y/n)", "y"))
                 {
                     hostConfigRepo[foundHost.Name] = foundHost;
                 }
@@ -219,12 +230,15 @@ namespace fw_monitor
         {
             if (ListFetcher == null)
             {
-                throw new NoNullAllowedException("ListFetcher needs to be added");
+                ListFetcher = new ListFetcher(listConfig);
+            }
+            else
+            {
+                ListFetcher.ListConfig = listConfig;
             }
 //            string saveFile = Environment.GetEnvironmentVariable("HOME") + "/test/emerging_threats.txt";
             
             Console.WriteLine($"Trying to fetch list from {listConfig.Name} ({listConfig.URL})...");
-//            ListFetcher = new ListFetcher(listConfig);
 
             Console.WriteLine("Fetching list.");
             Task fetchTask = Task.Run(ListFetcher.FetchAndParse);

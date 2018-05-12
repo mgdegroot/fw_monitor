@@ -12,17 +12,19 @@ namespace fw_monitor
     class Program
     {
         
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             
             // TODO: Factory or builder pattern -->
             IExecutor executor = new NFTablesExecutor(new SshConnector());
+            IListFetcher listFetcher = new ListFetcher();
                 
             NFTManager manager = new NFTManager()
             {
                 Executor = executor,
+                ListFetcher = listFetcher,
             };
-            manager.ManageLists(null, null, true);
+            await manager.ManageLists(null, null, true);
             Console.WriteLine("Finished");
         }
 

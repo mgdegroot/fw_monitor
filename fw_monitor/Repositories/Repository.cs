@@ -18,7 +18,12 @@ namespace fw_monitor
         protected IUtil _util;
         protected ICreator _creator;
 
-        private static Dictionary<Type, Repository> _instances = new Dictionary<Type, Repository>();
+        private static Dictionary<Type, IRepository> _instances = new Dictionary<Type, IRepository>()
+        {
+            {typeof(ListConfigRepository), new ListConfigRepository()},
+            {typeof(HostConfigRepository), new HostConfigRepository()},
+            {typeof(ListRepository), new ListRepository()},
+        };
 
 
         public Repository()
@@ -48,20 +53,12 @@ namespace fw_monitor
             set => throw new NotImplementedException(); 
         }
         
+        
+        
         public IRepository GetInstance(Type theType)
         {
-            // TODO: implement singleton creation based on theType. Possibly directly using theType???
-            switch (theType.Name)
-            {
-                case nameof(ListConfigRepository):
-                    return new ListConfigRepository();
-                case nameof(HostConfigRepository):
-                    return new HostConfigRepository();
-                case nameof(ListRepository):
-                    return new ListRepository();
-                default:
-                    return null;
-            }
+            _instances.TryGetValue(theType, out IRepository repo);
+            return repo;
         }
         
         public virtual IRepositoryItem Get(string name) => throw new NotImplementedException();
