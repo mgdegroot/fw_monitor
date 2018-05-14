@@ -1,83 +1,137 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Reflection.Metadata.Ecma335;
+using System.Runtime.Serialization.Json;
 using System.Text;
-using fw_monitor.DataObjects;
 
 namespace fw_monitor
 {
-    
-    public class Repository : IRepository
+    public class Repository<T> : IRepository<T> where T : class, IRepositoryItem, new()
     {
-        protected string REPO_FILE_EXTENSION = Util.Extension.JSON;
-        protected string filenamePrefix = string.Empty;
-        protected readonly Dictionary<string, Config> repository = new Dictionary<string, Config>();
+        private IUtil _util = new Util();
+        private Dictionary<string, T> _repository = new Dictionary<string, T>();
+
+//        private static Dictionary<Type, IRepository> _repoInstances = new Dictionary<Type, IRepository>()
+//        {
+//            {typeof(ListConfigRepository), new ListConfigRepository()},
+//            {typeof(HostConfigRepository), new HostConfigRepository()},
+//            {typeof(ListRepository), new ListRepository()},
+//        };
         
-        protected IUtil _util;
-        protected ICreator _creator;
-
-        private static Dictionary<Type, IRepository> _instances = new Dictionary<Type, IRepository>()
-        {
-            {typeof(ListConfigRepository), new ListConfigRepository()},
-            {typeof(HostConfigRepository), new HostConfigRepository()},
-            {typeof(ListRepository), new ListRepository()},
-        };
-
-
+        
         public Repository()
         {
-            this._util = new Util();
         }
-        
-        public Repository(IUtil util)
+
+        public Repository(IUtil util) : this()
         {
-            this._util = util;
+            _util = util;
         }
-        
-        // TODO: config file option -->
+
+        // TODO: BackingStore use is not yet generic / interface based -->
+        public Util.BackingStore BackingStore { get; set; } = Util.BackingStoreType;
         public bool SerializeToFile { get; set; } = true;
-        // TODO: remove hardcoded string -->
-        public string SerializePath { get; set; } = Util.SerializePath;
+        public string SerializePath { get; set; }= Util.SerializePath;
 
-        public virtual ICreator Creator
+        public T this[string key]
         {
-            get => _creator;
-            set => _creator = value;
+            get => Get(key);
+            set => Set(value);
+        }
+        
+        public S GetInstance<S>() where S: IRepository<S>, new()
+        {
+            S instance = new S();
+            return instance;
+        }
+        
+        public ICreator Creator { get; set; } = new T().Creator;
+
+        public T Get(string key)
+        {
+            _repository.TryGetValue(key, out T value);
+
+            if (value == null && BackingStore != Util.BackingStore.NONE)
+            {
+                string path = getFilename(key);
+
+                if (File.Exists(path))
+                {
+                    string strValue = readFromFile(path);
+                    value = deserialize(strValue);
+                    _repository.Add(key, value);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            
+            return value;
         }
 
-        public virtual IRepositoryItem this[string index]
+        public void Set(T value)
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException(); 
-        }
-        
-        
-        
-        public IRepository GetInstance(Type theType)
-        {
-            _instances.TryGetValue(theType, out IRepository repo);
-            return repo;
-        }
-        
-        public virtual IRepositoryItem Get(string name) => throw new NotImplementedException();
-        public virtual void Set(IRepositoryItem item) =>throw new NotImplementedException();
-//        public virtual IRepositoryItem Create(string name) => throw new NotImplementedException();
+            _repository[value.Name] = value;
 
-        protected string getFilename(string name) =>
-            Path.Combine(SerializePath, $"{filenamePrefix}_{name}{REPO_FILE_EXTENSION}");
+            if (BackingStore == Util.BackingStore.FILE)
+            {
+                string strValue = serialize(value);
+                writeToFile(getFilename(value.Name), strValue);
+            }
+        }
 
+        public T Create(string key)
+        {
+            T created = new T();
+            created.Name = key;
+
+            return created;
+        }
+
+        private string serialize(T repoItem)
+        {
+            MemoryStream memoryStream = new MemoryStream();
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
+            try
+            {
+                serializer.WriteObject(memoryStream, repoItem);
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+            
+            byte[] json = memoryStream.ToArray();
+            memoryStream.Close();
+            return Encoding.UTF8.GetString(json, 0, json.Length);
+        }
+
+        private T deserialize(string json)
+        {
+            MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
+            T repoItem = (T)serializer.ReadObject(memoryStream) as T;
+
+            return repoItem;
+        }
+
+        private string getFilename(string key)
+        {
+            return Path.Combine(SerializePath, $"{typeof(T).Name}_{key}{Util.Extension.JSON}");
+        }
+
+        private string readFromFile(string path)
+        {
+            return _util.ReadFromFile(path, false);
+        }
+
+        private void writeToFile(string path, string content)
+        {
+            _util.WriteToFile(path, content, false);
+        }
         
-        protected virtual string readFromFile(string path)
-        {
-            string content = File.ReadAllText(path, Encoding.UTF8);
-            return content;
-        }
-    
-        protected virtual void writeToFile(string path, string content)
-        {
-            new Util().WriteToFile(path, content, false);
-        }
+        
+        
     }
 }

@@ -21,8 +21,18 @@ namespace fw_monitor
             public string TEXT => ".txt";
 
         }
+
+        public enum BackingStore
+        {
+            FILE,
+            DATABASE,
+            SERVICE,
+            NONE,
+        }
         
         public static FilenameExtension Extension { get; set; }
+
+        public static BackingStore BackingStoreType { get; set; } = BackingStore.FILE;
         
         public bool WriteToFile(string path, string content, bool append=false)
         {

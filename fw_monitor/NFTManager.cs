@@ -18,16 +18,21 @@ namespace fw_monitor
     
     public class NFTManager : IManager
     {
-        public IRepository Repository { get; set; } = new Repository();
+//        public IRepository Repository { get; set; } = new Repository();
+        
         // TODO: not really proper to add them here just to facilitate unit tests...
         public IExecutor Executor { get; set; }
-        public ListConfig ListConfig { get; set; }
-        public HostConfig HostConfig { get; set; }
+//        public ListConfig ListConfig { get; set; }
+//        public HostConfig HostConfig { get; set; }
         public IListFetcher ListFetcher { get; set; }
+        public IRepository<ListConfig>ListConfigRepository { get; set; } = new Repository<ListConfig>();
+        public IRepository<HostConfig>HostConfigRepository { get; set; } = new Repository<HostConfig>();
+        public IRepository<ContentList>ListRepository { get; set; } = new Repository<ContentList>();
+        public IUtil Utility { get; set; } = new Util();
 
         public async Task ManageLists() => ManageLists(null, null);
 
-        public async Task ManageLists(string listConfigName = null, string hostConfigName = null, bool interactive = true)
+        public async Task ManageLists(string listConfigName, string hostConfigName, bool interactive = true)
         {
             ListConfig listConfig = handleGetListConfig(listConfigName, interactive);
             if (listConfig == null)
@@ -93,7 +98,8 @@ namespace fw_monitor
         {
             foreach (KeyValuePair<string,List<string>> kvp in lists)
             {
-                ListRepository listRepository = (ListRepository) Repository.GetInstance(typeof(ListRepository));
+//                GenericRepository<ContentList> listRepository = new GenericRepository<ContentList>();
+                //ListRepository listRepository = (ListRepository) Repository.GetInstance(typeof(ListRepository));
                 
 //                List<string> elements = kvp.Value;
                 ContentList cl = new ContentList()
@@ -105,20 +111,21 @@ namespace fw_monitor
                 };
                 
                 
-                listRepository.Set(cl);
+                ListRepository.Set(cl);
             }
         }
 
         private ListConfig handleGetListConfig(string listName=null, bool interactive=false)
         {
-            ListConfigRepository listConfigRepo = (ListConfigRepository) Repository.GetInstance(typeof(ListConfigRepository));
+//            GenericRepository<ListConfig> listConfigRepo = new GenericRepository<ListConfig>();
+//            ListConfigRepository listConfigRepo = (ListConfigRepository) Repository.GetInstance(typeof(ListConfigRepository));
             if (!interactive)
             {
                 if (string.IsNullOrEmpty(listName))
                 {
                     return null;
                 }
-                return (ListConfig)listConfigRepo.Get(listName);
+                return (ListConfig)ListConfigRepository.Get(listName);
             }
             else
             {
@@ -131,14 +138,14 @@ namespace fw_monitor
                 {
                     if (ConsoleHelper.ReadInputAsBool("Create new (y/n)", "n"))
                     {
-                        foundList = (ListConfig) listConfigRepo.Creator.Create(listName);
+                        foundList = (ListConfig) ListConfigRepository.Creator.Create(listName);
                         whileMsg = $"Created list with name {foundList?.Name}. Correct (y/n)";
                         newlyCreated = true;
                     }
                     else
                     {
                         listName = ConsoleHelper.ReadInput("list name", listName);
-                        foundList = (ListConfig) listConfigRepo.Get(listName);
+                        foundList = (ListConfig) ListConfigRepository.Get(listName);
                         if (foundList == null)
                         {
                             whileMsg = $"No list found by the name of {listName}. Exit (y/n)?";
@@ -155,7 +162,7 @@ namespace fw_monitor
 
                 if (newlyCreated && ConsoleHelper.ReadInputAsBool("Serialize list config (y/n)", "y"))
                 {
-                    listConfigRepo[foundList.Name] = foundList;
+                    ListConfigRepository[foundList.Name] = foundList;
                 }
                 
                 return foundList;
@@ -164,14 +171,15 @@ namespace fw_monitor
 
         private HostConfig handleGetHostConfig(string hostName=null, bool interactive=false)
         {
-            HostConfigRepository hostConfigRepo = (HostConfigRepository)Repository.GetInstance(typeof(HostConfigRepository));
+//            GenericRepository<HostConfig> hostConfigRepo = new GenericRepository<HostConfig>();
+            //HostConfigRepository hostConfigRepo = (HostConfigRepository)Repository.GetInstance(typeof(HostConfigRepository));
             if (!interactive)
             {
                 if (string.IsNullOrEmpty(hostName))
                 {
                     return null;
                 }
-                return (HostConfig) hostConfigRepo.Get(hostName);
+                return (HostConfig) HostConfigRepository.Get(hostName);
             }
             else
             {
@@ -184,14 +192,14 @@ namespace fw_monitor
                 {
                     if (ConsoleHelper.ReadInputAsBool("Create new (y/n)", "n"))
                     {
-                        foundHost = (HostConfig) hostConfigRepo.Creator.Create(hostName);
+                        foundHost = (HostConfig) HostConfigRepository.Creator.Create(hostName);
                         whileMsg = $"Created list with name {foundHost?.Name}. Correct (y/n)";
                         newlyCreated = true;
                     }
                     else
                     {
                         hostName = ConsoleHelper.ReadInput("host name", hostName);
-                        foundHost = (HostConfig) hostConfigRepo.Get(hostName);
+                        foundHost = (HostConfig) HostConfigRepository.Get(hostName);
                         if (foundHost == null)
                         {
                             whileMsg = $"No host found by the name of {hostName}. Exit (y/n)";
@@ -207,7 +215,7 @@ namespace fw_monitor
 
                 if (newlyCreated && ConsoleHelper.ReadInputAsBool("Serialize host config (y/n)", "y"))
                 {
-                    hostConfigRepo[foundHost.Name] = foundHost;
+                    HostConfigRepository[foundHost.Name] = foundHost;
                 }
                 
                 return foundHost;

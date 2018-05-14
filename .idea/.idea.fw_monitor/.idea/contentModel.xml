@@ -28,14 +28,18 @@
           <e p="IRepositoryItem.cs" t="Include" />
           <e p="IUtil.cs" t="Include" />
         </e>
+        <e p="Legacy" t="Include">
+          <e p="HostConfigRepository.cs" t="Include" />
+          <e p="IRepository.cs" t="Include" />
+          <e p="ListConfigRepository.cs" t="Include" />
+          <e p="ListRepository.cs" t="Include" />
+          <e p="Repository.cs" t="Include" />
+        </e>
         <e p="ListFetcher.cs" t="Include" />
         <e p="NFTManager.cs" t="Include" />
         <e p="NFTablesExecutor.cs" t="Include" />
         <e p="Program.cs" t="Include" />
         <e p="Repositories" t="Include">
-          <e p="HostConfigRepository.cs" t="Include" />
-          <e p="ListConfigRepository.cs" t="Include" />
-          <e p="ListRepository.cs" t="Include" />
           <e p="Repository.cs" t="Include" />
         </e>
         <e p="SshConnector.cs" t="Include" />

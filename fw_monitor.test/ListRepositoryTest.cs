@@ -26,17 +26,19 @@ namespace fw_monitor.test
         [Fact]
         public void WhenCreateThenNewContentListTest()
         {
+            // TODO replace this non-sensible test with something usefulzzz -->
             const string expectedName = "test";
             ContentList expectedContentList = createDummyContentList(expectedName);
             
             ICreator substCreator = Substitute.For<ICreator>();
             substCreator.Create(Arg.Any<string>()).Returns(expectedContentList);
             
-            IUtil util = new Util();
-            ListRepository listRepository = new ListRepository(util)
+            IUtil util = Substitute.For<IUtil>();
+            Repository<ContentList> listRepository = new Repository<ContentList>()
             {
-                Creator = substCreator, 
+                Creator = substCreator,
             };
+
 
             ContentList actualContentList = listRepository.Creator.Create(expectedName) as ContentList;
 

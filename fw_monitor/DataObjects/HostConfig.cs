@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System;
+using System.Runtime.Serialization;
 
 namespace fw_monitor.DataObjects
 {
@@ -39,5 +40,32 @@ SupportsFlush: {SupportsFlush.ToString()};]";
         public override bool Equals(object obj) => obj?.ToString() == ToString();
         public override int GetHashCode() => GetFormattedConfig(true).GetHashCode();
 
+    }
+    
+    public class HostConfigFromStdInCreator : ICreator
+    {
+        public IRepositoryItem Create(string name)
+        {
+            return readFromSTDIN(name);
+        }
+        
+        private HostConfig readFromSTDIN(string name=null)
+        {
+            HostConfig hostConfig = new HostConfig() { Name=name,};
+            hostConfig.Name = ConsoleHelper.ReadInput("hostname", hostConfig.Name);
+            hostConfig.HostIP = ConsoleHelper.ReadInput("host ip", hostConfig.HostIP);
+            hostConfig.Username = ConsoleHelper.ReadInput("username", hostConfig.Username);
+            hostConfig.Password = ConsoleHelper.ReadInput("password", hostConfig.Password);
+            hostConfig.CertPath = ConsoleHelper.ReadInput("certificate path", hostConfig.CertPath);
+            hostConfig.Table = ConsoleHelper.ReadInput("table name", hostConfig.Table);
+            hostConfig.Chain = ConsoleHelper.ReadInput("chain name", hostConfig.Chain);
+            hostConfig.FlushChain = ConsoleHelper.ReadInputAsBool("flush chain", hostConfig.FlushChain ? "y" : "n");
+            hostConfig.Set = ConsoleHelper.ReadInput("set name", hostConfig.Set);
+            hostConfig.SupportsFlush = ConsoleHelper.ReadInputAsBool("supports flush", hostConfig.SupportsFlush ? "y" : "n");
+            
+            hostConfig.UsePubkeyLogin = String.IsNullOrEmpty(hostConfig.CertPath) == false;
+
+            return hostConfig;
+        }
     }
 }

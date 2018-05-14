@@ -35,6 +35,8 @@ namespace fw_monitor.DataObjects
         [DataMember]
         public bool IsSubList { get; set; } = false;
         
+        public ICreator Creator { get; set; } = new ContentListFromStdInCreator();
+        
         public string this[int index]
         {
             get => Get(index);
@@ -122,5 +124,35 @@ ContentHash: {Elements.GetHashCode()}";
             return contentList;
         }
 
+    }
+    
+    public class ContentListFromStdInCreator : ICreator
+    {
+        public IRepositoryItem Create(string name)
+        {
+            return readFromSTDIN(name);
+        }
+        
+        
+        private ContentList readFromSTDIN(string name)
+        {
+            ContentList contentList = new ContentList() { Name=name, };
+            contentList.Name = ConsoleHelper.ReadInput("name", contentList.Name);
+            contentList.Version = ConsoleHelper.ReadInput("version", contentList.Version);
+            contentList.IsSubList = ConsoleHelper.ReadInputAsBool("is sublist (y/n)", contentList.IsSubList ? "y" : "n");
+            bool addElems = ConsoleHelper.ReadInputAsBool("enter elements (y/n)", "y");
+            
+            while (addElems)
+            {
+                string elem = ConsoleHelper.ReadInput("element (when done hit <enter>)");
+                addElems = !string.IsNullOrEmpty(elem);
+                if (!string.IsNullOrEmpty(elem))
+                {
+                    contentList.Add(elem);
+                }
+            }
+
+            return contentList;
+        }
     }
 }

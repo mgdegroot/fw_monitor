@@ -10,6 +10,8 @@ namespace fw_monitor.DataObjects
         public virtual string Name { get; set; }
         [DataMember(Order=1)]
         public virtual string Description { get; set; } = string.Empty;
+        
+        public virtual ICreator Creator { get; set; }
 
         public abstract override string ToString();
         public override bool Equals(Object obj) => obj?.ToString() == ToString();

@@ -5,8 +5,8 @@ namespace fw_monitor
 {
     public interface IManager
     {
-        ListConfig ListConfig { get; set; }
-        HostConfig HostConfig { get; set; }
+//        ListConfig ListConfig { get; set; }
+//        HostConfig HostConfig { get; set; }
         IExecutor Executor { get; set; }
         Task ManageLists(ListConfig listConfig, HostConfig hostConfig);
     }

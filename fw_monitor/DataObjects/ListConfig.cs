@@ -94,4 +94,34 @@ LineSeparator: {LineSeparator};]";
         public override int GetHashCode() => GetFormattedConfig(true).GetHashCode();
 
     }
+    
+    public class ListConfigFromStdInCreator : ICreator
+    {
+        public IRepositoryItem Create(string name)
+        {
+            return readFromSTDIN(name);
+        }
+        
+        private ListConfig readFromSTDIN(string name=null)
+        {
+            ListConfig listConfig = new ListConfig();
+            
+            listConfig.Name = ConsoleHelper.ReadInput("name", name);
+            listConfig.Description = ConsoleHelper.ReadInput("description");
+            listConfig.URL = new Uri(ConsoleHelper.ReadInput("URL"));
+            listConfig.IsComposite = ConsoleHelper.ReadInputAsBool("contains sublists (y/n)");
+            if (listConfig.IsComposite)
+            {
+                listConfig.SubsetHeader = new Regex(ConsoleHelper.ReadInput("regex for subset name"));
+            }
+            listConfig.IsRevisioned = ConsoleHelper.ReadInputAsBool("is versioned (y/n");
+            if (listConfig.IsRevisioned)
+            {
+                listConfig.RevisionRegex = new Regex(ConsoleHelper.ReadInput("regex for version number"));
+            }
+
+            return listConfig;
+        }
+    }
+
 }

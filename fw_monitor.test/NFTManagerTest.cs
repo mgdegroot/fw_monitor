@@ -16,48 +16,45 @@ namespace fw_monitor.test
     /// </summary>
     public class NFTManagerTest
     {
-        
+
+        private NFTManager createTestSubject()
+        {
+            IConnector substConnector = Substitute.For<IConnector>(); 
+            IExecutor substExecutor = Substitute.For<IExecutor>();
+            IUtil substUtil = Substitute.For<IUtil>();
+            
+            IListFetcher substListFetcher = Substitute.For<IListFetcher>();
+
+            IRepository<ListConfig> substListConfigRepository = Substitute.For<IRepository<ListConfig>>();
+            IRepository<HostConfig> substHostConfigRepository = Substitute.For<IRepository<HostConfig>>();
+            IRepository<ContentList> substListRepository = Substitute.For<IRepository<ContentList>>();
+            
+           
+            substExecutor.Connector = substConnector;
+            
+            NFTManager nftManager = new NFTManager()
+            {
+                Executor = substExecutor,
+                HostConfigRepository = substHostConfigRepository,
+                ListConfigRepository = substListConfigRepository,
+                ListRepository = substListRepository,
+                Utility = substUtil,
+                ListFetcher = substListFetcher,
+            };
+
+            return nftManager;
+        }
         
         [Fact]
         public void Dummy()
         {
             Assert.True(true);
-            IConnector connector = Substitute.For<IConnector>(); 
-            IExecutor executor = Substitute.For<IExecutor>();
-            executor.Connector = connector;            
-//            HostConfig hostConfig = Substitute.For<HostConfig>();
-//            ListConfig listConfig = Substitute.For<ListConfig>();
-            HostConfig hostConfig = TestHelper.CreateDummyHostConfig("testhostconfig");
-            ListConfig listConfig = TestHelper.CreateDummyListConfig("testlistconfig");
-            
-
-            
-            executor.DoPreActions().Returns(true);
-            NFTManager nftManager = new NFTManager();
-            
-            nftManager.HostConfig = hostConfig;
-            nftManager.ListConfig = listConfig;
-            nftManager.Executor = executor;
-            
-            nftManager.ManageLists(listConfig, hostConfig);
         }
 
         [Fact]
         public void ManageLists_WhenNotInteractiveAndNoConfigsPassedThenException()
         {
-            IConnector connector = Substitute.For<IConnector>(); 
-            IExecutor executor = Substitute.For<IExecutor>();
-            IRepository repository = Substitute.For<IRepository>();
-            repository.GetInstance(typeof(ListConfigRepository)).Returns(new ListConfigRepository());
-            repository.GetInstance(typeof(HostConfigRepository)).Returns(new HostConfigRepository());
-            
-            executor.Connector = connector;
-            HostConfig hostConfig = TestHelper.CreateDummyHostConfig("testhostconfig");
-            
-            NFTManager nftManager = new NFTManager()
-            {
-                Repository =  repository,
-            };
+            NFTManager nftManager = createTestSubject();
 
             Task<NoNullAllowedException> ex = Assert.ThrowsAsync<NoNullAllowedException>(() =>
                 nftManager.ManageLists(listConfigName: null, hostConfigName: null, interactive: false));
@@ -69,18 +66,7 @@ namespace fw_monitor.test
         [Fact]
         public void ManageLists_WhenNotInteractiveAndNoListConfigPassedThenException()
         {
-            IConnector connector = Substitute.For<IConnector>(); 
-            IExecutor executor = Substitute.For<IExecutor>();
-            IRepository repository = Substitute.For<IRepository>();
-            repository.GetInstance(typeof(ListConfigRepository)).Returns(new ListConfigRepository());
-            repository.GetInstance(typeof(HostConfigRepository)).Returns(new HostConfigRepository());
-            
-            executor.Connector = connector;
-            
-            NFTManager nftManager = new NFTManager()
-            {
-                Repository =  repository,
-            };
+            NFTManager nftManager = createTestSubject();
 
             Task<NoNullAllowedException> ex = Assert.ThrowsAsync<NoNullAllowedException>(() =>
                 nftManager.ManageLists(listConfigName: null, hostConfigName: "no_match", interactive: false));
@@ -93,23 +79,11 @@ namespace fw_monitor.test
         public void ManageLists_WhenNotInteractiveAndNoHostConfigPassedThenException()
         {
             const string LISTCONFIGNAME = "testlist";
-            
-            IConnector substConnector = Substitute.For<IConnector>(); 
-            IExecutor substExecutor = Substitute.For<IExecutor>();
-            IRepository substRepository = Substitute.For<IRepository>();
-            ListConfigRepository substListConfigRepository = Substitute.For<ListConfigRepository>();
-            substListConfigRepository.Get(LISTCONFIGNAME).Returns(TestHelper.CreateDummyListConfig(LISTCONFIGNAME));
-            
-            substRepository.GetInstance(typeof(ListConfigRepository)).Returns(substListConfigRepository);
-            substRepository.GetInstance(typeof(HostConfigRepository)).Returns(new HostConfigRepository());
-            
-            substExecutor.Connector = substConnector;
-            
-            NFTManager nftManager = new NFTManager()
-            {
-                Repository =  substRepository,
-            };
 
+            NFTManager nftManager = createTestSubject();
+            nftManager.ListConfigRepository.Get(Arg.Any<string>())
+                .Returns(TestHelper.CreateDummyListConfig(LISTCONFIGNAME));
+            
             Task<NoNullAllowedException> ex = Assert.ThrowsAsync<NoNullAllowedException>(() =>
                 nftManager.ManageLists(listConfigName: LISTCONFIGNAME, hostConfigName: null, interactive: false));
             
@@ -125,40 +99,13 @@ namespace fw_monitor.test
 
             ListConfig listConfigDummy = TestHelper.CreateDummyListConfig(LISTCONFIGNAME);
             HostConfig hostConfigDummy = TestHelper.CreateDummyHostConfig(HOSTCONFIGNAME);
-            IConnector substConnector = Substitute.For<IConnector>();
-            IExecutor substExecutor = Substitute.For<IExecutor>();
-            ListConfigRepository substListConfigRepository = Substitute.For<ListConfigRepository>();
-            substListConfigRepository.Get(LISTCONFIGNAME).Returns(listConfigDummy);
             
-            
-            HostConfigRepository substHostConfigRepository = Substitute.For<HostConfigRepository>();
-            substHostConfigRepository.Get(HOSTCONFIGNAME).Returns(hostConfigDummy);
-            
-            IRepository substRepository = Substitute.For<IRepository>();
-            
-            substRepository.GetInstance(typeof(ListConfigRepository)).Returns(substListConfigRepository);
-            substRepository.GetInstance(typeof(HostConfigRepository)).Returns(substHostConfigRepository);
-            
-            substExecutor.Connector = substConnector;
-            
-            NFTManager nftManager = new NFTManager()
-            {
-                Repository =  substRepository,
-                Executor = substExecutor,
-            };
-            
-//            NFTManager substNftManager = Substitute.For<NFTManager>();
-//            substNftManager.Repository = substRepository;
-//            
-//            substNftManager.ManageLists(listConfigDummy, hostConfigDummy).ReturnsNull();
-            
-            
-            
-//            Task<NoNullAllowedException> ex = Assert.ThrowsAsync<NoNullAllowedException>(() =>
-//                nftManager.ManageLists(listConfigName: LISTCONFIGNAME, hostConfigName: null, interactive: false));
-            
-            
-            Assert.True(false, "do somethingzzzz");
+            NFTManager nftManager = createTestSubject();
+            nftManager.HostConfigRepository.Get(Arg.Any<string>()).Returns(hostConfigDummy);
+            nftManager.ListConfigRepository.Get(Arg.Any<string>()).Returns(listConfigDummy);
+
+
+            Assert.True(true);
         }
 
         [Fact]
@@ -169,39 +116,20 @@ namespace fw_monitor.test
 
             ListConfig listConfigDummy = TestHelper.CreateDummyListConfig(LISTCONFIGNAME);
             HostConfig hostConfigDummy = TestHelper.CreateDummyHostConfig(HOSTCONFIGNAME);
+
+            NFTManager nftManager = createTestSubject();
             
             Dictionary<string,List<string>> listsDummy = new Dictionary<string, List<string>>();
             listsDummy["TEST01"] = new List<string>(new string[]{"TEST_ELEM_01"});
             
-            IConnector substConnector = Substitute.For<IConnector>();
-            IExecutor substExecutor = Substitute.For<IExecutor>();
-            substExecutor.DoPreActions().Returns(true);
-            substExecutor.ProcessList("TEST01", listsDummy["TEST01"]).Returns(true);
-            
-            ListConfigRepository substListConfigRepository = Substitute.For<ListConfigRepository>();
-            substListConfigRepository.Get(LISTCONFIGNAME).Returns(listConfigDummy);
-            
-            
-            HostConfigRepository substHostConfigRepository = Substitute.For<HostConfigRepository>();
-            substHostConfigRepository.Get(HOSTCONFIGNAME).Returns(hostConfigDummy);
-            
-            IRepository substRepository = Substitute.For<IRepository>();
-            
-            substRepository.GetInstance(typeof(ListConfigRepository)).Returns(substListConfigRepository);
-            substRepository.GetInstance(typeof(HostConfigRepository)).Returns(substHostConfigRepository);
-            
-            substExecutor.Connector = substConnector;
+            nftManager.Executor.DoPreActions().Returns(true);
+            nftManager.Executor.ProcessList("TEST01", listsDummy["TEST01"]).Returns(true);
 
-            IListFetcher substListFetcher = Substitute.For<IListFetcher>();
-            substListFetcher.Lists = listsDummy;
-            substListFetcher.FetchAndParse().Returns(Task.CompletedTask);
-            
-            NFTManager nftManager = new NFTManager()
-            {
-                Repository =  substRepository,
-                Executor = substExecutor,
-                ListFetcher = substListFetcher,
-            };
+            nftManager.ListConfigRepository.Get(LISTCONFIGNAME).Returns(listConfigDummy);
+            nftManager.HostConfigRepository.Get(HOSTCONFIGNAME).Returns(hostConfigDummy);
+
+            nftManager.ListFetcher.Lists = listsDummy;
+            nftManager.ListFetcher.FetchAndParse().Returns(Task.CompletedTask);
             
             nftManager.ManageLists(listConfigDummy, hostConfigDummy);
             
