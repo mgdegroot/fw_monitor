@@ -18,12 +18,8 @@ namespace fw_monitor
     
     public class NFTManager : IManager
     {
-//        public IRepository Repository { get; set; } = new Repository();
-        
         // TODO: not really proper to add them here just to facilitate unit tests...
         public IExecutor Executor { get; set; }
-//        public ListConfig ListConfig { get; set; }
-//        public HostConfig HostConfig { get; set; }
         public IListFetcher ListFetcher { get; set; }
         public IRepository<ListConfig>ListConfigRepository { get; set; } = new Repository<ListConfig>();
         public IRepository<HostConfig>HostConfigRepository { get; set; } = new Repository<HostConfig>();
@@ -69,17 +65,13 @@ namespace fw_monitor
         {
             Dictionary<string, List<string>> lists = await fetchList(listConfig);
             
-            //
-
             handleSaveFetchedLists(listConfig, lists);
             
-            //
+            Executor.Connector.ErrorAdded += errorOutputHandler;
+            Executor.Connector.OutputAdded += outputOutputHandler;
 
-            Executor.Connector.ErrorAdded += nftSsh_ErrorAdded;
-            Executor.Connector.OutputAdded += nftSsh_OutputAdded;
-
-            Executor.ErrorAdded += nftSsh_ErrorAdded;
-            Executor.OutputAdded += nftSsh_OutputAdded;
+            Executor.ErrorAdded += errorOutputHandler;
+            Executor.OutputAdded += outputOutputHandler;
 
             Executor.HostConfig = hostConfig;
             Executor.ListConfig = listConfig;
@@ -98,10 +90,7 @@ namespace fw_monitor
         {
             foreach (KeyValuePair<string,List<string>> kvp in lists)
             {
-//                GenericRepository<ContentList> listRepository = new GenericRepository<ContentList>();
-                //ListRepository listRepository = (ListRepository) Repository.GetInstance(typeof(ListRepository));
-                
-//                List<string> elements = kvp.Value;
+
                 ContentList cl = new ContentList()
                 {
                     Name=kvp.Key,
@@ -117,8 +106,6 @@ namespace fw_monitor
 
         private ListConfig handleGetListConfig(string listName=null, bool interactive=false)
         {
-//            GenericRepository<ListConfig> listConfigRepo = new GenericRepository<ListConfig>();
-//            ListConfigRepository listConfigRepo = (ListConfigRepository) Repository.GetInstance(typeof(ListConfigRepository));
             if (!interactive)
             {
                 if (string.IsNullOrEmpty(listName))
@@ -171,8 +158,6 @@ namespace fw_monitor
 
         private HostConfig handleGetHostConfig(string hostName=null, bool interactive=false)
         {
-//            GenericRepository<HostConfig> hostConfigRepo = new GenericRepository<HostConfig>();
-            //HostConfigRepository hostConfigRepo = (HostConfigRepository)Repository.GetInstance(typeof(HostConfigRepository));
             if (!interactive)
             {
                 if (string.IsNullOrEmpty(hostName))
@@ -222,16 +207,15 @@ namespace fw_monitor
             }
         }
         
-        private void nftSsh_ErrorAdded(object sender, EventArgs e)
+        private void errorOutputHandler(IOutputProvider sender, string msg)
         {
             SshConnector connector = (SshConnector) sender;
-            Console.WriteLine($"ERROR ADDED: {connector.LastError}");
+            Console.WriteLine($"{sender.GetType().Name} - ERROR ADDED: {connector.LastError}");
         }
 
-        private void nftSsh_OutputAdded(object sender, EventArgs e)
+        private void outputOutputHandler(IOutputProvider sender, string msg)
         {
-            SshConnector connector = (SshConnector) sender;
-            Console.WriteLine($"OUTPUT ADDED: {connector.LastOutput}");
+            Console.WriteLine($"{sender.GetType().Name} - OUTPUT ADDED: {msg}");
         }
         
         private async Task<Dictionary<string, List<string>>> fetchList(ListConfig listConfig)
@@ -244,6 +228,10 @@ namespace fw_monitor
             {
                 ListFetcher.ListConfig = listConfig;
             }
+
+            ListFetcher.ErrorAdded += errorOutputHandler;
+            ListFetcher.OutputAdded += outputOutputHandler;
+            
 //            string saveFile = Environment.GetEnvironmentVariable("HOME") + "/test/emerging_threats.txt";
             
             Console.WriteLine($"Trying to fetch list from {listConfig.Name} ({listConfig.URL})...");

@@ -34,6 +34,8 @@ namespace fw_monitor
 
         public static BackingStore BackingStoreType { get; set; } = BackingStore.FILE;
         
+        public delegate void OutputHandler(IOutputProvider sender, string msg);
+        
         public bool WriteToFile(string path, string content, bool append=false)
         {
             FileInfo attributes = new FileInfo(path);

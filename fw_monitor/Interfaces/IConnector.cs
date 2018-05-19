@@ -5,7 +5,7 @@ using Renci.SshNet;
 
 namespace fw_monitor
 {
-    public interface IConnector
+    public interface IConnector : IOutputProvider
     {
         void Connect();
         bool ExecuteCommand(string command);
@@ -16,16 +16,16 @@ namespace fw_monitor
         
         HostConfig HostConfig { get; set; }
         
-        IEnumerable<string>Errors { get; }
-        IEnumerable<string>Output { get; }
-        
-        string LastError { get; }
-        string LastOutput { get; }
-
-        event EventHandler ErrorAdded;
-        event EventHandler OutputAdded;
-
-        void OnErrorAdded(EventArgs e);
-        void OnOutputAdded(EventArgs e);
+//        IEnumerable<string>Errors { get; }
+//        IEnumerable<string>Output { get; }
+//        
+//        string LastError { get; }
+//        string LastOutput { get; }
+//
+//        event EventHandler ErrorAdded;
+//        event EventHandler OutputAdded;
+//
+//        void OnErrorAdded(EventArgs e);
+//        void OnOutputAdded(EventArgs e);
     }
 }

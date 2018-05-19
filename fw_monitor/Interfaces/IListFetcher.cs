@@ -4,7 +4,7 @@ using fw_monitor.DataObjects;
 
 namespace fw_monitor
 {
-    public interface IListFetcher
+    public interface IListFetcher : IOutputProvider
     {
         ListConfig ListConfig { get; set; }
         

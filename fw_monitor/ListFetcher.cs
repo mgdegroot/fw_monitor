@@ -11,15 +11,27 @@ using fw_monitor.DataObjects;
 
 namespace fw_monitor
 {
-    public class ListFetcher : IListFetcher
+    /// <summary>
+    /// TODO: provide output using IOutputProvider implementation
+    /// </summary>
+    public class ListFetcher : IListFetcher, IOutputProvider
     {
+        private readonly List<string> _errors = new List<string>();
+        private readonly List<string> _output = new List<string>();
+            
         public string CombinedListName { get; set; } = Util.MAINLISTNAME;
 
         public ListConfig ListConfig { get; set; } = new ListConfig();
 
         public Dictionary<string, List<string>> Lists { get; set; } = new Dictionary<string, List<string>>();
-                
-        public string LastError { get; private set; } = string.Empty;
+        public IEnumerable<string> Errors => _errors;
+        public IEnumerable<string> Output => _output;
+
+        public string LastError => Errors.Last();
+        public string LastOutput => Output.Last();
+
+        public event Action<IOutputProvider, string> ErrorAdded;
+        public event Action<IOutputProvider, string> OutputAdded;
         
         public IList<string> this[string key]
         {
@@ -59,7 +71,7 @@ namespace fw_monitor
         {
             if (string.IsNullOrEmpty(Raw))
             {
-                LastError = "Content (Raw) is empty. Not writing empty file...";
+                addError("Content (Raw) is empty. Not writing empty file...");
                 return;
             }
             
@@ -70,7 +82,7 @@ namespace fw_monitor
         {
             if (Lines.Count == 0)
             {
-                LastError = "List is empty. Not writing empty file";
+                addError("List is empty. Not writing empty file");
             }
             
             File.WriteAllLines(path, Lines);
@@ -91,7 +103,7 @@ namespace fw_monitor
             }
             catch (HttpRequestException hre)
             {
-                LastError = hre.Message;
+                addError(hre.Message);
             }
             finally
             {
@@ -111,7 +123,7 @@ namespace fw_monitor
         {
             if (string.IsNullOrEmpty(Raw))
             {
-                LastError = "Content (Raw) is empty. Not converting...";
+                addError("Content (Raw) is empty. Not converting...");
                 return;
             }
 
@@ -122,7 +134,7 @@ namespace fw_monitor
         {
             if (string.IsNullOrEmpty(Raw))
             {
-                LastError = "Content (Raw) is empty. Not cleaning...";
+                addError("Content (Raw) is empty. Not cleaning...");
             }
 
             Lines = RawLines.Where(i => i.StartsWith('#') == false).ToList();
@@ -170,6 +182,18 @@ namespace fw_monitor
 
             Lists[CombinedListName] = Lines;
 
+        }
+
+        private void addError(string msg)
+        {
+            _errors.Add(msg);
+            ErrorAdded?.Invoke(this, msg);
+        }
+
+        private void addOutput(string msg)
+        {
+            _output.Add(msg);
+            OutputAdded?.Invoke(this, msg);
         }
 
         private void DisplayLists()

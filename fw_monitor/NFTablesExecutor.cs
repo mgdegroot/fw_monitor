@@ -8,7 +8,7 @@ using RailwaySharp.ErrorHandling;
 namespace fw_monitor
 {
 
-    public class NFTablesExecutor : IExecutor
+    public class NFTablesExecutor : IExecutor, IOutputProvider
     {
         private string preRuleset = string.Empty, 
             postRuleset = string.Empty;
@@ -57,7 +57,15 @@ namespace fw_monitor
 
         public ListConfig ListConfig { get; set; }
 
+        public IEnumerable<string> Errors => _errors;
+        public IEnumerable<string> Output => _output;
 
+        public string LastError => Errors.Last();
+        public string LastOutput => Output.Last();
+
+        public event Action<IOutputProvider, string> ErrorAdded;
+        public event Action<IOutputProvider, string> OutputAdded;
+        
         public bool ProcessList(string name, IEnumerable<string>elements)
         {
             bool res = true;
@@ -118,25 +126,19 @@ namespace fw_monitor
         {
             return true;
         }
-        public IEnumerable<string> Errors => _errors;
-        public IEnumerable<string> Output => _output;
 
-        public string LastError => Errors.Last();
-        public string LastOutput => Output.Last();
-
-        public event EventHandler ErrorAdded;
-        public event EventHandler OutputAdded;
+        private void addError(string msg)
+        {
+            _errors.Add(msg);
+            ErrorAdded?.Invoke(this, msg);
+        }
         
-        public virtual void OnErrorAdded(EventArgs e)
+        private void addOutput(string msg)
         {
-            ErrorAdded?.Invoke(this, e);
+            _output.Add(msg);
+            OutputAdded?.Invoke(this, msg);
         }
-
-        public virtual void OnOutputAdded(EventArgs e)
-        {
-            OutputAdded?.Invoke(this, e);
-        }
-
+        
         private bool AddElementsSequentially(string setName, IEnumerable<string> elements)
         {
             bool retVal = false;
@@ -144,18 +146,17 @@ namespace fw_monitor
             {
                 setName = this.HostConfig.Set;
             }
+            
             string cmdTemplate = $"sudo nft add element {HostConfig.Table} {setName} {{{{0}}}}";
             List<string> cmdList = new List<string>();
             foreach (string element in elements)
             {
                 cmdList.Add($"sudo nft add element {HostConfig.Table} {setName} {{{element}}}");
             }
-
+            
             List<bool> result = Connector.ExecuteCommands(cmdList) as List<bool>; 
 
-
             return result?.Exists(x => x == false) ?? false;
-
         }
 
         private bool AddElementsParallel(string setName, IEnumerable<string> elements)

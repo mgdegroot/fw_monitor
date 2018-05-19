@@ -10,13 +10,13 @@ using Renci.SshNet;
 
 namespace fw_monitor
 {
-    public class SshConnector : IConnector
+    public class SshConnector : IConnector, IOutputProvider
     {
         private ConnectionInfo _connectionInfo;
         private readonly List<string> _errors = new List<string>();
         private readonly List<string> _output = new List<string>();
         private HostConfig _hostConfig;
-
+        
 
         public SshConnector()
         {
@@ -51,9 +51,9 @@ namespace fw_monitor
 
         public string LastError => Errors.Last();
         public string LastOutput => Output.Last();
-
-        public event EventHandler ErrorAdded;
-        public event EventHandler OutputAdded;
+        
+        public event Action<IOutputProvider, string> ErrorAdded;
+        public event Action<IOutputProvider, string> OutputAdded;
         
         public void Connect()
         {
@@ -86,17 +86,6 @@ namespace fw_monitor
             return result;
         }
 
-
-        public virtual void OnErrorAdded(EventArgs e)
-        {
-            ErrorAdded?.Invoke(this, e);
-        }
-
-        public virtual void OnOutputAdded(EventArgs e)
-        {
-            OutputAdded?.Invoke(this, e);
-        }
-
         private (bool, IEnumerable<string>) checkSetup()
         {
             List<string> errors = new List<string>();
@@ -119,9 +108,6 @@ namespace fw_monitor
             return (errors.Count == 0, errors);
         }
         
- 
-
-
         private IEnumerable<(bool, string)> execSshCommands(IEnumerable<string> commands)
         {
             List<(bool,string)> retVal = new List<(bool, string)>(commands.Count());
@@ -193,13 +179,13 @@ namespace fw_monitor
         private void addError(string value)
         {
             _errors.Add(value);
-            OnErrorAdded(EventArgs.Empty);
+            ErrorAdded?.Invoke(this, value);
         }
 
         private void addOutput(string value)
         {
             _output.Add(value);
-            OnOutputAdded(EventArgs.Empty);
+            OutputAdded?.Invoke(this, value);
         }
     }
 }
