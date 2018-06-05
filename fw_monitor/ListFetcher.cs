@@ -14,25 +14,14 @@ namespace fw_monitor
     /// <summary>
     /// TODO: provide output using IOutputProvider implementation
     /// </summary>
-    public class ListFetcher : IListFetcher, IOutputProvider
+    public class ListFetcher : IListFetcher
     {
-        private readonly List<string> _errors = new List<string>();
-        private readonly List<string> _output = new List<string>();
-            
         public string CombinedListName { get; set; } = Util.MAINLISTNAME;
-
+        public IFeedbackProvider Feedback { get; set; } = new FeedbackProvider("ListFetcher");
         public ListConfig ListConfig { get; set; } = new ListConfig();
 
         public Dictionary<string, List<string>> Lists { get; set; } = new Dictionary<string, List<string>>();
-        public IEnumerable<string> Errors => _errors;
-        public IEnumerable<string> Output => _output;
 
-        public string LastError => Errors.Last();
-        public string LastOutput => Output.Last();
-
-        public event Action<IOutputProvider, string> ErrorAdded;
-        public event Action<IOutputProvider, string> OutputAdded;
-        
         public IList<string> this[string key]
         {
             get => Get(key); 
@@ -66,32 +55,61 @@ namespace fw_monitor
         {
             await orchestrateActions();
         }
-        
-        private void SaveRawToFile(string path)
+
+        public async Task<string> GetNewestVersion()
         {
-            if (string.IsNullOrEmpty(Raw))
-            {
-                addError("Content (Raw) is empty. Not writing empty file...");
-                return;
-            }
+            HttpClient client = new HttpClient();
+
+            string rawVersion = string.Empty;
             
-            File.WriteAllText(path, Raw);
+            try
+            {
+                rawVersion = await client.GetStringAsync(ListConfig.UrlVersion);
+            }
+            catch (Exception ex)
+            {
+                Feedback.AddError($"Error fetching version: {ex.Message}");
+            }
+            finally
+            {
+                client.Dispose();
+            }
+
+            return parseRawVersion(rawVersion);
+
+        }
+
+        private string parseRawVersion(string rawVersion)
+        {
+            // no cleaning-up needed here -->
+            return rawVersion;
         }
         
-        private void SaveListToFile(string path)
-        {
-            if (Lines.Count == 0)
-            {
-                addError("List is empty. Not writing empty file");
-            }
-            
-            File.WriteAllLines(path, Lines);
-        }
+//        private void SaveRawToFile(string path)
+//        {
+//            if (string.IsNullOrEmpty(Raw))
+//            {
+//                addError("Content (Raw) is empty. Not writing empty file...");
+//                return;
+//            }
+//            
+//            File.WriteAllText(path, Raw);
+//        }
+//        
+//        private void SaveListToFile(string path)
+//        {
+//            if (Lines.Count == 0)
+//            {
+//                addError("List is empty. Not writing empty file");
+//            }
+//            
+//            File.WriteAllLines(path, Lines);
+//        }
         
         private async Task fetch()
         {
             
-            if (ListConfig.URL == null)
+            if (ListConfig.Url == null)
             {
                 throw new ArgumentException("URL is not set");
             }
@@ -99,11 +117,11 @@ namespace fw_monitor
             HttpClient client = new HttpClient();
             try
             {
-                Raw = await client.GetStringAsync(ListConfig.URL);
+                Raw = await client.GetStringAsync(ListConfig.Url);
             }
             catch (HttpRequestException hre)
             {
-                addError(hre.Message);
+                Feedback.AddError(hre.Message);
             }
             finally
             {
@@ -123,7 +141,7 @@ namespace fw_monitor
         {
             if (string.IsNullOrEmpty(Raw))
             {
-                addError("Content (Raw) is empty. Not converting...");
+                Feedback.AddError("Content (Raw) is empty. Not converting...");
                 return;
             }
 
@@ -134,7 +152,7 @@ namespace fw_monitor
         {
             if (string.IsNullOrEmpty(Raw))
             {
-                addError("Content (Raw) is empty. Not cleaning...");
+                Feedback.AddError("Content (Raw) is empty. Not cleaning...");
             }
 
             Lines = RawLines.Where(i => i.StartsWith('#') == false).ToList();
@@ -147,7 +165,6 @@ namespace fw_monitor
 
             intermediate.AddRange(RawLines.Where(i => ListConfig.EmptyLineIndicators.IsMatch(i) == false));
 
-            int listRevision = 0;
             bool inBody = false;
             string listName = "noname";
             for (int i = 0; i < intermediate.Count; i++)
@@ -158,6 +175,7 @@ namespace fw_monitor
 
                     if (match.Success)
                     {
+                        var listRevision = 0;
                         int.TryParse(match.Groups[1].Value, out listRevision);
                         ListConfig.Version = listRevision.ToString();
                         inBody = true;
@@ -182,18 +200,6 @@ namespace fw_monitor
 
             Lists[CombinedListName] = Lines;
 
-        }
-
-        private void addError(string msg)
-        {
-            _errors.Add(msg);
-            ErrorAdded?.Invoke(this, msg);
-        }
-
-        private void addOutput(string msg)
-        {
-            _output.Add(msg);
-            OutputAdded?.Invoke(this, msg);
         }
 
         private void DisplayLists()

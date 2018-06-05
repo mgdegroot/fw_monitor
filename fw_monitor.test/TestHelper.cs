@@ -17,7 +17,7 @@ namespace fw_monitor.test
             {
                 Name=name ?? "test",
                 Description = (name ?? "test") + "description",
-                URL = new Uri("http://localhost"),
+                Url = new Uri("http://localhost"),
                 IsComposite = true,
                 IsRevisioned = true,
                 RevisionRegex = new Regex(".*"),

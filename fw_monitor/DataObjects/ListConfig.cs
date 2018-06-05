@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 namespace fw_monitor.DataObjects
 {
     [DataContract]
-    public class ListConfig : Config
+    public class ListConfig : Config, IRepositoryItem
     {
+        private ICreator _creator = new ListConfigFromStdInCreator();
         
         [DataMember]
         private string _revisionRegexStr = @"^# Rev (\d*)$";
@@ -24,10 +27,11 @@ namespace fw_monitor.DataObjects
         private Regex _subsetHeader;
         private Regex _revisionRegex;
 
-        [DataMember(Order = 2)] public Uri URL { get; set; }
-        [DataMember(Order = 3)] public bool IsComposite { get; set; } = false;
-        [DataMember(Order = 4)] public bool IsRevisioned { get; set; } = false;
-        [DataMember(Order = 5)] public string Version { get; set; }
+        [DataMember(Order = 2)] public Uri Url { get; set; }
+        [DataMember(Order = 3)] public Uri UrlVersion { get; set; }
+        [DataMember(Order = 4)] public bool IsComposite { get; set; } = false;
+        [DataMember(Order = 5)] public bool IsRevisioned { get; set; } = false;
+        [DataMember(Order = 6)] public string Version { get; set; }
         [DataMember(Order = 9)] public string InvalidCharReplacement { get; set; } = "_";
         [DataMember(Order = 10)] public string LineSeparator { get; set; } = Environment.NewLine;
 
@@ -79,7 +83,7 @@ namespace fw_monitor.DataObjects
 //Description: {Description};";
             return $@"[Name: {Name};
 Description: {Description};
-URL: {URL};
+URL: {Url};
 IsComposite: {IsComposite.ToString()};
 SubsetHeader: {_subsetHeaderRegexStr};
 IsRevisioned: {IsRevisioned.ToString()};
@@ -89,9 +93,18 @@ EmptyLineIndicators: {_emptyLineIndicatorRegexStr};
 LineSeparator: {LineSeparator};]";
         }
 
+        public override ICreator Creator { 
+            get => _creator;
+            set => _creator = value;
+        }
         public override string ToString() => GetFormattedConfig(false);
         public override bool Equals(object obj) => obj?.ToString() == ToString();
         public override int GetHashCode() => GetFormattedConfig(true).GetHashCode();
+
+        public bool IsUpdateAvailable()
+        {
+            throw new NotImplementedException("nog niet");
+        }
 
     }
     
@@ -108,7 +121,7 @@ LineSeparator: {LineSeparator};]";
             
             listConfig.Name = ConsoleHelper.ReadInput("name", name);
             listConfig.Description = ConsoleHelper.ReadInput("description");
-            listConfig.URL = new Uri(ConsoleHelper.ReadInput("URL"));
+            listConfig.Url = new Uri(ConsoleHelper.ReadInput("URL"));
             listConfig.IsComposite = ConsoleHelper.ReadInputAsBool("contains sublists (y/n)");
             if (listConfig.IsComposite)
             {
@@ -118,6 +131,7 @@ LineSeparator: {LineSeparator};]";
             if (listConfig.IsRevisioned)
             {
                 listConfig.RevisionRegex = new Regex(ConsoleHelper.ReadInput("regex for version number"));
+                listConfig.UrlVersion = new Uri(ConsoleHelper.ReadInput("Version URL"));
             }
 
             return listConfig;

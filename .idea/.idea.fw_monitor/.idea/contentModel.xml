@@ -16,12 +16,14 @@
           <e p="ListConfig.cs" t="Include" />
           <e p="NFTablesHostConfig.cs" t="Include" />
         </e>
+        <e p="FeedbackProvider.cs" t="Include" />
         <e p="Interfaces" t="Include">
           <e p="IConfig.cs" t="Include" />
           <e p="IConnector.cs" t="Include" />
           <e p="IContentList.cs" t="Include" />
           <e p="ICreator.cs" t="Include" />
           <e p="IExecutor.cs" t="Include" />
+          <e p="IFeedbackProvider.cs" t="Include" />
           <e p="IListFetcher.cs" t="Include" />
           <e p="IManager.cs" t="Include" />
           <e p="IOutputProvider.cs" t="Include" />
@@ -55,6 +57,20 @@
           </e>
         </e>
       </e>
+      <e p="fw_monitor.DAL" t="IncludeRecursive">
+        <e p="Interfaces" t="Include">
+          <e p="IListDAL.cs" t="Include" />
+        </e>
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="fw_monitor.DAL.csproj" t="IncludeRecursive" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp2.0" t="Include">
+              <e p="fw_monitor.DAL.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+      </e>
       <e p="fw_monitor.sln" t="IncludeFlat" />
       <e p="fw_monitor.systemtest" t="IncludeRecursive">
         <e p="UnitTest1.cs" t="Include" />
@@ -72,6 +88,7 @@
       <e p="fw_monitor.test" t="IncludeRecursive">
         <e p="ConsoleHelperTest.cs" t="Include" />
         <e p="ContentListTest.cs" t="Include" />
+        <e p="FeedbackProviderTest.cs" t="Include" />
         <e p="HostConfigTest.cs" t="Include" />
         <e p="ListConfigRepositoryTest.cs" t="Include" />
         <e p="ListConfigTest.cs" t="Include" />

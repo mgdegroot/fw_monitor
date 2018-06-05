@@ -10,11 +10,9 @@ using Renci.SshNet;
 
 namespace fw_monitor
 {
-    public class SshConnector : IConnector, IOutputProvider
+    public class SshConnector : IConnector
     {
         private ConnectionInfo _connectionInfo;
-        private readonly List<string> _errors = new List<string>();
-        private readonly List<string> _output = new List<string>();
         private HostConfig _hostConfig;
         
 
@@ -27,6 +25,8 @@ namespace fw_monitor
             this.HostConfig = hostConfig;
 
         }
+
+        public IFeedbackProvider Feedback { get; set; } = new FeedbackProvider("SshConnector");
 
         public HostConfig HostConfig
         {
@@ -45,15 +45,6 @@ namespace fw_monitor
                 }
             }
         }
-
-        public IEnumerable<string> Errors => _errors;
-        public IEnumerable<string> Output => _output;
-
-        public string LastError => Errors.Last();
-        public string LastOutput => Output.Last();
-        
-        public event Action<IOutputProvider, string> ErrorAdded;
-        public event Action<IOutputProvider, string> OutputAdded;
         
         public void Connect()
         {
@@ -151,7 +142,7 @@ namespace fw_monitor
             if (sshCommand == null)
             {
                 string err = "sshCommand is null";
-                addError(err);
+                Feedback.AddError(err);
                 retVal.success = false;
                 retVal.output = err;
             }
@@ -159,13 +150,13 @@ namespace fw_monitor
             {
                 if (!string.IsNullOrEmpty(sshCommand.Error))
                 {
-                    addError($"{sshCommand.CommandText}: {sshCommand.Error}");
+                    Feedback.AddError($"{sshCommand.CommandText}: {sshCommand.Error}");
                     retVal.success = false;
                 }
 
                 if (!string.IsNullOrEmpty(sshCommand.Result))
                 {
-                    addOutput($"{sshCommand.CommandText}: {sshCommand.Result}");
+                    Feedback.AddOutput($"{sshCommand.CommandText}: {sshCommand.Result}");
                 }
 
                 retVal.success = string.IsNullOrEmpty(sshCommand.Error);
@@ -174,18 +165,6 @@ namespace fw_monitor
             }
 
             return retVal;
-        }
-
-        private void addError(string value)
-        {
-            _errors.Add(value);
-            ErrorAdded?.Invoke(this, value);
-        }
-
-        private void addOutput(string value)
-        {
-            _output.Add(value);
-            OutputAdded?.Invoke(this, value);
         }
     }
 }

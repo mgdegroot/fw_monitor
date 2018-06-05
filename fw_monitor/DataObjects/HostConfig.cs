@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.Serialization;
 
 namespace fw_monitor.DataObjects
@@ -6,6 +7,8 @@ namespace fw_monitor.DataObjects
     [DataContract]
     public class HostConfig : Config
     {
+        private ICreator _creator = new HostConfigFromStdInCreator();
+        
         [DataMember(Order = 2)] public string HostIP { get; set; }
         [DataMember(Order = 3)] public bool ConnectUsingIP { get; set; } = true;
         [DataMember(Order = 4)] public string Username { get; set; }
@@ -34,6 +37,12 @@ Chain: {Chain};
 FlushChain: {FlushChain.ToString()};
 Set: {Set};
 SupportsFlush: {SupportsFlush.ToString()};]";
+        }
+
+        public override ICreator Creator
+        {
+            get => _creator;
+            set => _creator = value;
         }
 
         public override string ToString() => GetFormattedConfig(false);

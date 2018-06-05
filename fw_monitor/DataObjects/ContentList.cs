@@ -12,7 +12,7 @@ namespace fw_monitor.DataObjects
     [DataContract]
     public class ContentList : IContentList, IEnumerable<string>
     {
-        private string filenamePrefix = string.Empty;
+        private readonly string filenamePrefix;
         
         [DataMember]
         private List<string> _content = new List<string>();
@@ -30,8 +30,10 @@ namespace fw_monitor.DataObjects
         
         [DataMember]
         public string Name { get; set; }
+        
         [DataMember]
         public string Version { get; set; }
+        
         [DataMember]
         public bool IsSubList { get; set; } = false;
         
@@ -56,26 +58,20 @@ namespace fw_monitor.DataObjects
             
             Elements.Add(value);
         }
+        
         public void Set(int index, string value)
         {
             Elements[index] = value;
         }
-
-//        public void SaveToFile()
-//        {
-//            string strList = Serialize();
-//            util.WriteToFile(getFilename(Name), strList, false);
-//        }
-
 
         public string GetFormattedConfig(bool incSensitive = false)
         {    
             return $@"[Type: {this.GetType()};
 Name: {Name};
 Version: {Version};
-IsSubList: {IsSubList};
-NrElements: {Elements.Count};]
-ContentHash: {Elements.GetHashCode()}";
+IsSubList: {IsSubList.ToString()};
+NrElements: {Elements.Count.ToString()};]
+ContentHash: {Elements.GetHashCode().ToString()}";
         }
 
         public override string ToString() => GetFormattedConfig(false);

@@ -10,13 +10,6 @@ namespace fw_monitor
     {
         private IUtil _util = new Util();
         private Dictionary<string, T> _repository = new Dictionary<string, T>();
-
-//        private static Dictionary<Type, IRepository> _repoInstances = new Dictionary<Type, IRepository>()
-//        {
-//            {typeof(ListConfigRepository), new ListConfigRepository()},
-//            {typeof(HostConfigRepository), new HostConfigRepository()},
-//            {typeof(ListRepository), new ListRepository()},
-//        };
         
         
         public Repository()

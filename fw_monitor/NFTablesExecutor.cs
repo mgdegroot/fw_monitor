@@ -8,13 +8,11 @@ using RailwaySharp.ErrorHandling;
 namespace fw_monitor
 {
 
-    public class NFTablesExecutor : IExecutor, IOutputProvider
+    public class NFTablesExecutor : IExecutor
     {
         private string preRuleset = string.Empty, 
             postRuleset = string.Empty;
         
-        private readonly List<string> _errors = new List<string>();
-        private readonly List<string> _output = new List<string>();
         private HostConfig _hostConfig;
         
         public NFTablesExecutor() {}
@@ -38,6 +36,8 @@ namespace fw_monitor
             REJECT,
         }
         
+        public IFeedbackProvider Feedback { get; set; } = new FeedbackProvider("NFTablesExecutor");
+        
         
         public IConnector Connector { get; set; }
 
@@ -57,14 +57,6 @@ namespace fw_monitor
 
         public ListConfig ListConfig { get; set; }
 
-        public IEnumerable<string> Errors => _errors;
-        public IEnumerable<string> Output => _output;
-
-        public string LastError => Errors.Last();
-        public string LastOutput => Output.Last();
-
-        public event Action<IOutputProvider, string> ErrorAdded;
-        public event Action<IOutputProvider, string> OutputAdded;
         
         public bool ProcessList(string name, IEnumerable<string>elements)
         {
@@ -127,18 +119,6 @@ namespace fw_monitor
             return true;
         }
 
-        private void addError(string msg)
-        {
-            _errors.Add(msg);
-            ErrorAdded?.Invoke(this, msg);
-        }
-        
-        private void addOutput(string msg)
-        {
-            _output.Add(msg);
-            OutputAdded?.Invoke(this, msg);
-        }
-        
         private bool AddElementsSequentially(string setName, IEnumerable<string> elements)
         {
             bool retVal = false;

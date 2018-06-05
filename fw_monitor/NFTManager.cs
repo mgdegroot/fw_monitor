@@ -64,14 +64,16 @@ namespace fw_monitor
         public async Task ManageLists(ListConfig listConfig, HostConfig hostConfig)
         {
             Dictionary<string, List<string>> lists = await fetchList(listConfig);
+            ListConfigRepository[listConfig.Name] = listConfig;
+            
             
             handleSaveFetchedLists(listConfig, lists);
             
-            Executor.Connector.ErrorAdded += errorOutputHandler;
-            Executor.Connector.OutputAdded += outputOutputHandler;
+            Executor.Connector.Feedback.ErrorAdded += errorOutputHandler;
+            Executor.Connector.Feedback.OutputAdded += outputOutputHandler;
 
-            Executor.ErrorAdded += errorOutputHandler;
-            Executor.OutputAdded += outputOutputHandler;
+            Executor.Feedback.ErrorAdded += errorOutputHandler;
+            Executor.Feedback.OutputAdded += outputOutputHandler;
 
             Executor.HostConfig = hostConfig;
             Executor.ListConfig = listConfig;
@@ -112,7 +114,7 @@ namespace fw_monitor
                 {
                     return null;
                 }
-                return (ListConfig)ListConfigRepository.Get(listName);
+                return ListConfigRepository.Get(listName);
             }
             else
             {
@@ -154,6 +156,24 @@ namespace fw_monitor
                 
                 return foundList;
             }
+        }
+
+        private bool checkUpdateAvailable(ListConfig listConfig)
+        {
+            bool retVal = false;
+            // If not revisioned always return true -->
+            if (listConfig.IsRevisioned == false)
+            {
+                retVal = true;
+            }
+            else
+            {
+                string currVer = listConfig.Version;
+//                string availVer = ListFetcher.Get
+                //TODO: implement version checking
+            }
+
+            return retVal;
         }
 
         private HostConfig handleGetHostConfig(string hostName=null, bool interactive=false)
@@ -207,15 +227,14 @@ namespace fw_monitor
             }
         }
         
-        private void errorOutputHandler(IOutputProvider sender, string msg)
+        private void errorOutputHandler(IFeedbackProvider sender, string msg)
         {
-            SshConnector connector = (SshConnector) sender;
-            Console.WriteLine($"{sender.GetType().Name} - ERROR ADDED: {connector.LastError}");
+            Console.WriteLine($"{sender.Owner} - ERROR ADDED: {sender.LastError}");
         }
 
-        private void outputOutputHandler(IOutputProvider sender, string msg)
+        private void outputOutputHandler(IFeedbackProvider sender, string msg)
         {
-            Console.WriteLine($"{sender.GetType().Name} - OUTPUT ADDED: {msg}");
+            Console.WriteLine($"{sender.Owner} - OUTPUT ADDED: {msg}");
         }
         
         private async Task<Dictionary<string, List<string>>> fetchList(ListConfig listConfig)
@@ -229,12 +248,12 @@ namespace fw_monitor
                 ListFetcher.ListConfig = listConfig;
             }
 
-            ListFetcher.ErrorAdded += errorOutputHandler;
-            ListFetcher.OutputAdded += outputOutputHandler;
+            ListFetcher.Feedback.ErrorAdded += errorOutputHandler;
+            ListFetcher.Feedback.OutputAdded += outputOutputHandler;
             
 //            string saveFile = Environment.GetEnvironmentVariable("HOME") + "/test/emerging_threats.txt";
             
-            Console.WriteLine($"Trying to fetch list from {listConfig.Name} ({listConfig.URL})...");
+            Console.WriteLine($"Trying to fetch list from {listConfig.Name} ({listConfig.Url})...");
 
             Console.WriteLine("Fetching list.");
             Task fetchTask = Task.Run(ListFetcher.FetchAndParse);
